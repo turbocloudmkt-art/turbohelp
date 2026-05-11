@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import type { Metadata } from 'next'
+import { auth } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 import Header from '@/components/public/Header'
 import Footer from '@/components/public/Footer'
 import CategoryCard from '@/components/public/CategoryCard'
@@ -19,6 +21,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HubPage() {
+  const session = await auth()
+  if (!session) redirect('/login')
+
   const [categories, featuredArticles, highlights] = await Promise.all([
     prisma.category.findMany({
       where: { active: true },
@@ -55,7 +60,7 @@ export default async function HubPage() {
   return (
     <div className="page-wrapper">
       <JsonLd data={siteLinksSearchBoxSchema(SITE_URL)} />
-      <Header />
+      <Header user={{ name: session.user.name, role: session.user.role }} />
 
       <section className="hub-hero">
         <div className="container">

@@ -3,8 +3,14 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import SearchBar from '@/components/public/SearchBar'
+import { UserMenu } from '@/components/public/UserMenu'
+import type { UserRole } from '@prisma/client'
 
-export default function Header() {
+interface HeaderProps {
+  user: { name: string; role: UserRole }
+}
+
+export default function Header({ user }: HeaderProps) {
   const pathname = usePathname()
   const isHome = pathname === '/'
 
@@ -24,14 +30,7 @@ export default function Header() {
             </div>
           )}
 
-          <a
-            href="https://turbocloud.com.br"
-            className="site-header__back"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            ← Voltar ao site
-          </a>
+          <UserMenu user={user} />
         </div>
       </div>
     </header>

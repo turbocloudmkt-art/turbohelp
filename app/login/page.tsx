@@ -2,11 +2,14 @@
 
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { PasswordInput } from '@/components/admin/PasswordInput'
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get('callbackUrl') || '/'
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -30,7 +33,7 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/admin')
+    router.push(callbackUrl)
     router.refresh()
   }
 
@@ -55,7 +58,6 @@ export default function LoginPage() {
           border: '1px solid var(--color-border)',
         }}
       >
-        {/* Logo TurboCloud */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div
             style={{
@@ -93,7 +95,7 @@ export default function LoginPage() {
             </span>
           </div>
           <p style={{ color: 'var(--text-tertiary)', fontSize: '14px', margin: 0 }}>
-            Painel Administrativo
+            Acesso ao Sistema
           </p>
         </div>
 
@@ -110,7 +112,7 @@ export default function LoginPage() {
               required
               autoComplete="email"
               className="form-input"
-              placeholder="admin@turbocloud.com.br"
+              placeholder="seu@email.com"
             />
           </div>
 

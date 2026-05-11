@@ -50,7 +50,7 @@ export default async function ArticlePreviewPage({ params }: Props) {
         ⚠️ MODO DE VISUALIZAÇÃO RESTRITA: VOCÊ ESTÁ VISUALIZANDO UM CONTEÚDO QUE PODE AINDA NÃO ESTAR PUBLICADO.
       </div>
       
-      <Header />
+      <Header user={{ name: session.user.name, role: session.user.role }} />
 
       <main className="page-content">
         <div className="container">

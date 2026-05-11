@@ -2,10 +2,16 @@ import { NextResponse } from 'next/server'
 import { join } from 'path'
 import { readFile } from 'fs/promises'
 import fs from 'fs'
+import { auth } from '@/lib/auth'
 
 export async function GET(request: Request, { params }: { params: { slug: string[] } }) {
+  const session = await auth()
+  if (!session) {
+    return new NextResponse('Não autorizado', { status: 401 })
+  }
+
   const slugArray = params.slug || []
-  
+
   if (slugArray.length === 0) {
     return new NextResponse('Not Found', { status: 404 })
   }

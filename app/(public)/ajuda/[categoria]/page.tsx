@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
+import { auth } from '@/lib/auth'
 import Header from '@/components/public/Header'
 import Footer from '@/components/public/Footer'
 import Breadcrumb from '@/components/public/Breadcrumb'
@@ -9,7 +10,7 @@ import JsonLd from '@/components/public/JsonLd'
 import { buildCategoryMetadata } from '@/lib/seo'
 import { categorySchema, breadcrumbSchema } from '@/lib/schema'
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://ajuda.turbocloud.com.br'
 const ARTICLES_PER_PAGE = 20
@@ -32,6 +33,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function CategoryPage({ params, searchParams }: Props) {
+  const session = await auth()
+  if (!session) redirect('/login')
+
   const category = await prisma.category.findUnique({
     where: { slug: params.categoria, active: true },
   })
@@ -72,7 +76,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     <div className="page-wrapper">
       <JsonLd data={categorySchema(category, articles, SITE_URL)} />
       <JsonLd data={breadcrumbSchema(breadcrumbItems)} />
-      <Header />
+      <Header user={{ name: session.user.name, role: session.user.role }} />
 
       <main className="page-content">
         <div className="container">

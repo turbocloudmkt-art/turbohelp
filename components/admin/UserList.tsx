@@ -17,10 +17,10 @@ type UserItem = {
 }
 
 const roleLabel: Record<UserRole, string> = {
-  SUPER_ADMIN: 'Super Admin',
+  SUPER_ADMIN: 'Admin',
   EDITOR: 'Editor',
   WRITER: 'Redator',
-  VIEWER: 'Visualizador'
+  VIEWER: 'Usuário comum'
 }
 
 export function UserList({ initialUsers, currentUserId }: { initialUsers: UserItem[], currentUserId: string }) {
@@ -36,7 +36,7 @@ export function UserList({ initialUsers, currentUserId }: { initialUsers: UserIt
     if (user) {
       setEditingUser({ ...user, password: '' })
     } else {
-      setEditingUser({ name: '', email: '', role: 'WRITER', active: true, password: '' })
+      setEditingUser({ name: '', email: '', role: 'VIEWER', active: true, password: '' })
     }
     setIsModalOpen(true)
   }
@@ -166,14 +166,16 @@ export function UserList({ initialUsers, currentUserId }: { initialUsers: UserIt
                 <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 600 }}>Perfil de Acesso</label>
                 <select
                   className="form-input"
-                  value={editingUser?.role || 'WRITER'}
+                  value={editingUser?.role || 'VIEWER'}
                   onChange={(e) => setEditingUser(prev => prev ? { ...prev, role: e.target.value as UserRole } : null)}
                   required
                 >
-                  <option value="VIEWER">Visualizador (Leitura)</option>
-                  <option value="WRITER">Redator (Cria rascunhos)</option>
-                  <option value="EDITOR">Editor (Publica artigos)</option>
-                  <option value="SUPER_ADMIN">Super Admin (Acesso total)</option>
+                  <option value="VIEWER">Usuário comum (apenas leitura)</option>
+                  <option value="EDITOR">Editor (gerencia conteúdo)</option>
+                  <option value="SUPER_ADMIN">Admin (acesso total)</option>
+                  {editingUser?.role === 'WRITER' && (
+                    <option value="WRITER">Redator (legado)</option>
+                  )}
                 </select>
               </div>
 

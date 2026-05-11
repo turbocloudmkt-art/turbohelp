@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
 import { auth } from '@/lib/auth'
 import { Sidebar } from '@/components/admin/Sidebar'
 
@@ -8,18 +7,14 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  const headersList = await headers()
-  const pathname = headersList.get('x-pathname') ?? ''
-
-  // A página de login está dentro deste layout — renderiza sem verificação de sessão
-  if (pathname === '/admin/login') {
-    return <>{children}</>
-  }
-
-  // Segunda camada de segurança além do middleware
   const session = await auth()
   if (!session) {
-    redirect('/admin/login')
+    redirect('/login')
+  }
+
+  // VIEWER não acessa o painel administrativo
+  if (session.user.role === 'VIEWER') {
+    redirect('/')
   }
 
   const isSuperAdmin = session.user.role === 'SUPER_ADMIN'
@@ -31,7 +26,6 @@ export default async function AdminLayout({
         userRole={session.user.role}
         isSuperAdmin={isSuperAdmin}
       />
-      {/* Área de conteúdo — margem compensa a sidebar fixa de 260px */}
       <main
         style={{
           flex: 1,

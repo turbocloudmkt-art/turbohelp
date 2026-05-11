@@ -9,7 +9,7 @@ import type { UserRole } from '@prisma/client'
 export const authConfig: NextAuthConfig = {
   trustHost: true,
   pages: {
-    signIn: '/admin/login',
+    signIn: '/login',
   },
   session: {
     strategy: 'jwt',

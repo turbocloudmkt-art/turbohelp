@@ -1,11 +1,16 @@
 import Link from 'next/link'
+import { auth } from '@/lib/auth'
 import Header from '@/components/public/Header'
 import Footer from '@/components/public/Footer'
 
-export default function NotFound() {
+export default async function NotFound() {
+  const session = await auth()
+
   return (
     <div className="page-wrapper">
-      <Header />
+      {session && (
+        <Header user={{ name: session.user.name, role: session.user.role }} />
+      )}
 
       <main className="page-content">
         <div className="container">

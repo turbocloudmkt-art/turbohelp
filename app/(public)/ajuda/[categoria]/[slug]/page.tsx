@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
+import { auth } from '@/lib/auth'
 import Header from '@/components/public/Header'
 import Footer from '@/components/public/Footer'
 import Breadcrumb from '@/components/public/Breadcrumb'
@@ -13,7 +14,7 @@ import { buildArticleMetadata } from '@/lib/seo'
 import { articleSchema, breadcrumbSchema } from '@/lib/schema'
 import { addHeadingIds } from '@/lib/htmlUtils'
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://ajuda.turbocloud.com.br'
 
@@ -45,6 +46,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ArticlePage({ params }: Props) {
+  const session = await auth()
+  if (!session) redirect('/login')
+
   const article = await prisma.article.findFirst({
     where: {
       slug: params.slug,
@@ -98,7 +102,7 @@ export default async function ArticlePage({ params }: Props) {
       {/* Registra view no cliente sem bloquear SSR */}
       <ViewsTracker articleId={article.id} />
 
-      <Header />
+      <Header user={{ name: session.user.name, role: session.user.role }} />
 
       <main className="page-content">
         <div className="container">

@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { auth } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
+  const session = await auth()
+  if (!session) {
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+  }
+
   const body = await request.json().catch(() => null)
   const articleId = body?.articleId as string | undefined
   const helpful = body?.helpful as boolean | undefined

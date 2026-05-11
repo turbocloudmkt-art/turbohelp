@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
+import { auth } from '@/lib/auth'
 import Header from '@/components/public/Header'
 import Footer from '@/components/public/Footer'
 import Breadcrumb from '@/components/public/Breadcrumb'
@@ -35,6 +37,9 @@ const MAIN_CATEGORIES = [
 ]
 
 export default async function BuscaPage({ searchParams }: Props) {
+  const session = await auth()
+  if (!session) redirect('/login')
+
   const query = (searchParams.q ?? '').trim()
 
   let results: SearchResult[] = []
@@ -65,7 +70,7 @@ export default async function BuscaPage({ searchParams }: Props) {
 
   return (
     <div className="page-wrapper">
-      <Header />
+      <Header user={{ name: session.user.name, role: session.user.role }} />
 
       <main className="page-content">
         <div className="container" style={{ maxWidth: '800px' }}>
