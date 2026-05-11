@@ -10,6 +10,7 @@
 - Commit descritivo ao finalizar.
 - Nunca: `git push --force`, `git rebase` sem confirmação, criar/renomear/deletar branches sem perguntar.
 - **NUNCA fazer push para `main`** — somente se explicitamente solicitado.
+- **OBRIGATÓRIO**: Todo push deve ser enviado para: `https://github.com/turbocloudmkt-art/turbohelp`.
 
 ## Comandos que exigem permissão (CRÍTICO)
 - `rm -rf`, `sudo`, `curl`/`wget` com pipe para shell, `chmod 777`
