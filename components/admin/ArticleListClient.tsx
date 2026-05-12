@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import type { ArticleStatus } from '@prisma/client'
+import type { ArticleStatus, ArticleType } from '@prisma/client'
 import { deleteArticles } from '@/app/(admin)/admin/artigos/actions'
 
 const STATUS_LABELS: Record<ArticleStatus, string> = {
@@ -20,10 +20,23 @@ const STATUS_STYLES: Record<ArticleStatus, { bg: string; color: string }> = {
   ARCHIVED:  { bg: '#f5f5f7', color: '#666666' },
 }
 
+const TYPE_LABELS: Record<ArticleType, string> = {
+  TEXT: 'Texto',
+  SUPPORT: 'Suporte',
+  VIDEO: 'Vídeo',
+}
+
+const TYPE_CLASS: Record<ArticleType, string> = {
+  TEXT: 'tc-typeBadge tc-typeBadge--text',
+  SUPPORT: 'tc-typeBadge tc-typeBadge--support',
+  VIDEO: 'tc-typeBadge tc-typeBadge--video',
+}
+
 interface ArticleClientProps {
   id: string
   title: string
   slug: string
+  type: ArticleType
   excerpt: string | null
   status: ArticleStatus
   views: number
@@ -140,11 +153,14 @@ export function ArticleListClient({ articles }: { articles: ArticleClientProps[]
                     />
                   </td>
                   <td style={{ padding: '12px 16px', maxWidth: '300px' }}>
-                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {article.title}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span className={TYPE_CLASS[article.type]}>{TYPE_LABELS[article.type]}</span>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {article.title}
+                      </div>
                     </div>
                     {article.excerpt && (
-                      <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {article.excerpt}
                       </div>
                     )}

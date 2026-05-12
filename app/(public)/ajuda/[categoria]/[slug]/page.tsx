@@ -5,6 +5,8 @@ import type { Metadata } from 'next'
 import { Topbar } from '@/components/public/Topbar'
 import ViewsTracker from '@/components/public/ViewsTracker'
 import FeedbackWidget from '@/components/public/FeedbackWidget'
+import { SupportRenderer } from '@/components/public/SupportRenderer'
+import { VideoEmbed } from '@/components/public/VideoEmbed'
 import { buildArticleMetadata } from '@/lib/seo'
 import { addHeadingIds } from '@/lib/htmlUtils'
 
@@ -42,6 +44,7 @@ export default async function ArticlePage({ params }: Props) {
     include: {
       category: true,
       author: { select: { name: true } },
+      supportBlocks: { orderBy: { order: 'asc' } },
     },
   })
   if (!article) notFound()
@@ -88,10 +91,25 @@ export default async function ArticlePage({ params }: Props) {
               {article.excerpt && <p className="tc-artPage__desc">{article.excerpt}</p>}
             </div>
 
-            <div
-              className="tc-artPage__body"
-              dangerouslySetInnerHTML={{ __html: contentWithIds }}
-            />
+            {article.type === 'SUPPORT' ? (
+              <SupportRenderer blocks={article.supportBlocks} />
+            ) : article.type === 'VIDEO' ? (
+              <>
+                {article.videoUrl && <VideoEmbed url={article.videoUrl} />}
+                {article.content && (
+                  <div
+                    className="tc-artPage__body"
+                    style={{ marginTop: 18 }}
+                    dangerouslySetInnerHTML={{ __html: contentWithIds }}
+                  />
+                )}
+              </>
+            ) : (
+              <div
+                className="tc-artPage__body"
+                dangerouslySetInnerHTML={{ __html: contentWithIds }}
+              />
+            )}
           </div>
 
           <aside className="tc-artPage__side">

@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 export default async function NovoArtigoPage() {
   const session = await auth()
 
-  if (!session || session.user.role === 'VIEWER') {
+  if (!session || (session.user.role !== 'EDITOR' && session.user.role !== 'SUPER_ADMIN')) {
     redirect('/admin/artigos')
   }
 

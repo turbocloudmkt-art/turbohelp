@@ -12,14 +12,18 @@ interface Props {
 export default async function EditarArtigoPage({ params }: Props) {
   const session = await auth()
 
-  if (!session || session.user.role === 'VIEWER') {
+  if (!session || (session.user.role !== 'EDITOR' && session.user.role !== 'SUPER_ADMIN')) {
     redirect('/admin/artigos')
   }
 
   const [article, categories] = await Promise.all([
     prisma.article.findUnique({
       where: { id: params.id },
-      include: { category: true, author: { select: { name: true } } },
+      include: {
+        category: true,
+        author: { select: { name: true } },
+        supportBlocks: { orderBy: { order: 'asc' } },
+      },
     }),
     prisma.category.findMany({
       orderBy: { order: 'asc' },
@@ -27,14 +31,7 @@ export default async function EditarArtigoPage({ params }: Props) {
     }),
   ])
 
-  if (!article) {
-    notFound()
-  }
-
-  // WRITER só pode editar os próprios artigos
-  if (session.user.role === 'WRITER' && article.authorId !== session.user.id) {
-    redirect('/admin/artigos')
-  }
+  if (!article) notFound()
 
   return (
     <div>
@@ -53,8 +50,15 @@ export default async function EditarArtigoPage({ params }: Props) {
           id: article.id,
           title: article.title,
           slug: article.slug,
+          type: article.type,
           excerpt: article.excerpt ?? '',
           content: article.content,
+          videoUrl: article.videoUrl ?? '',
+          supportBlocks: article.supportBlocks.map((b) => ({
+            title: b.title,
+            badge: b.badge ?? '',
+            content: b.content,
+          })),
           metaTitle: article.metaTitle ?? '',
           metaDesc: article.metaDesc ?? '',
           status: article.status,

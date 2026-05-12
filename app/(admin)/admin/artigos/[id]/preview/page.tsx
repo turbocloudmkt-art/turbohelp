@@ -4,6 +4,8 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { addHeadingIds } from '@/lib/htmlUtils'
 import { auth } from '@/lib/auth'
+import { SupportRenderer } from '@/components/public/SupportRenderer'
+import { VideoEmbed } from '@/components/public/VideoEmbed'
 
 export const metadata: Metadata = {
   title: 'Visualização de Rascunho | TurboCloud Admin',
@@ -28,6 +30,7 @@ export default async function ArticlePreviewPage({ params }: Props) {
     include: {
       category: true,
       author: { select: { name: true } },
+      supportBlocks: { orderBy: { order: 'asc' } },
     },
   })
   if (!article) notFound()
@@ -87,10 +90,25 @@ export default async function ArticlePreviewPage({ params }: Props) {
           </div>
         </div>
 
-        <div
-          className="tc-artPage__body"
-          dangerouslySetInnerHTML={{ __html: contentWithIds }}
-        />
+        {article.type === 'SUPPORT' ? (
+          <SupportRenderer blocks={article.supportBlocks} />
+        ) : article.type === 'VIDEO' ? (
+          <>
+            {article.videoUrl && <VideoEmbed url={article.videoUrl} />}
+            {article.content && (
+              <div
+                className="tc-artPage__body"
+                style={{ marginTop: 18 }}
+                dangerouslySetInnerHTML={{ __html: contentWithIds }}
+              />
+            )}
+          </>
+        ) : (
+          <div
+            className="tc-artPage__body"
+            dangerouslySetInnerHTML={{ __html: contentWithIds }}
+          />
+        )}
       </div>
     </div>
   )

@@ -36,31 +36,49 @@ model Category {
 }
 
 model Article {
-  id          String        @id @default(cuid())
-  title       String
-  slug        String        @unique
-  content     String
-  excerpt     String?
-  metaTitle   String?
-  metaDesc    String?
-  status      ArticleStatus @default(DRAFT)
-  views       Int           @default(0)
-  helpful     Int           @default(0)
-  notHelpful  Int           @default(0)
-  featured    Boolean       @default(false)
-  publishedAt DateTime?
-  categoryId  String
-  authorId    String
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  author      User          @relation("ArticleAuthor", fields: [authorId], references: [id])
-  category    Category      @relation(fields: [categoryId], references: [id])
-  highlights  Highlight[]
+  id            String         @id @default(cuid())
+  title         String
+  slug          String         @unique
+  type          ArticleType    @default(TEXT)
+  content       String
+  excerpt       String?
+  videoUrl      String?
+  metaTitle     String?
+  metaDesc      String?
+  status        ArticleStatus  @default(DRAFT)
+  views         Int            @default(0)
+  helpful       Int            @default(0)
+  notHelpful    Int            @default(0)
+  featured      Boolean        @default(false)
+  publishedAt   DateTime?
+  categoryId    String
+  authorId      String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  author        User           @relation("ArticleAuthor", fields: [authorId], references: [id])
+  category      Category       @relation(fields: [categoryId], references: [id])
+  highlights    Highlight[]
+  supportBlocks SupportBlock[]
 
   @@index([categoryId])
   @@index([slug])
   @@index([status])
+  @@index([type])
   @@map("articles")
+}
+
+model SupportBlock {
+  id        String   @id @default(cuid())
+  articleId String
+  order     Int      @default(0)
+  title     String
+  badge     String?
+  content   String
+  createdAt DateTime @default(now())
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+  @@map("support_blocks")
 }
 
 model Highlight {
@@ -80,6 +98,12 @@ enum ArticleStatus {
   REVIEW
   PUBLISHED
   ARCHIVED
+}
+
+enum ArticleType {
+  TEXT
+  SUPPORT
+  VIDEO
 }
 
 enum UserRole {

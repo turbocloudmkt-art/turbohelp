@@ -3,15 +3,23 @@
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-import type { ArticleStatus } from '@prisma/client'
+import type { ArticleStatus, ArticleType } from '@prisma/client'
+
+export interface SupportBlockInput {
+  title: string
+  badge?: string | null
+  content: string
+}
 
 export async function saveArticle(data: {
   id?: string
   title: string
   slug: string
+  type: ArticleType
   content: string
   excerpt: string
+  videoUrl?: string | null
+  supportBlocks?: SupportBlockInput[]
   metaTitle: string
   metaDesc: string
   status: ArticleStatus
@@ -21,100 +29,94 @@ export async function saveArticle(data: {
 }) {
   const session = await auth()
 
-  if (!session || session.user.role === 'VIEWER') {
+  // Apenas EDITOR e SUPER_ADMIN podem criar/editar artigos (Q6).
+  // WRITER fica restrito; VIEWER nunca.
+  if (!session || (session.user.role !== 'EDITOR' && session.user.role !== 'SUPER_ADMIN')) {
     throw new Error('Não autorizado')
   }
 
-  // Verifica permissão para publicar
-  if (data.status === 'PUBLISHED' && session.user.role === 'WRITER') {
-    throw new Error('Somente Editores ou Super Admins podem publicar artigos.')
+  if (data.type === 'VIDEO' && !data.videoUrl?.trim()) {
+    throw new Error('URL do vídeo é obrigatória para artigos do tipo VIDEO.')
   }
 
-  // Se houver ID, é atualização. Senão, é criação
+  if (data.type === 'SUPPORT' && (!data.supportBlocks || data.supportBlocks.length === 0)) {
+    throw new Error('Adicione ao menos um bloco para artigos do tipo SUPORTE.')
+  }
+
+  // Normaliza supportBlocks: limpa se não for SUPPORT
+  const blocks: SupportBlockInput[] = data.type === 'SUPPORT'
+    ? (data.supportBlocks ?? []).filter((b) => b.title.trim() && b.content.trim())
+    : []
+
+  const payload = {
+    title: data.title,
+    slug: data.slug,
+    type: data.type,
+    content: data.content,
+    excerpt: data.excerpt,
+    videoUrl: data.type === 'VIDEO' ? (data.videoUrl?.trim() || null) : null,
+    metaTitle: data.metaTitle,
+    metaDesc: data.metaDesc,
+    status: data.status,
+    featured: data.featured,
+    categoryId: data.categoryId,
+    ...(data.status === 'PUBLISHED' ? { publishedAt: new Date() } : {}),
+  }
+
+  let articleId: string
+
   if (data.id) {
-    // Para WRITER, verifica se ele é o autor original
-    if (session.user.role === 'WRITER') {
-      const existing = await prisma.article.findUnique({
-        where: { id: data.id },
-        select: { authorId: true },
-      })
-      if (!existing || existing.authorId !== session.user.id) {
-        throw new Error('Você só pode editar seus próprios artigos.')
+    await prisma.$transaction(async (tx) => {
+      await tx.article.update({ where: { id: data.id! }, data: payload })
+      await tx.supportBlock.deleteMany({ where: { articleId: data.id! } })
+      if (blocks.length > 0) {
+        await tx.supportBlock.createMany({
+          data: blocks.map((b, i) => ({
+            articleId: data.id!,
+            order: i,
+            title: b.title.trim(),
+            badge: b.badge?.trim() || null,
+            content: b.content,
+          })),
+        })
       }
-    }
-
-    const updated = await prisma.article.update({
-      where: { id: data.id },
-      data: {
-        title: data.title,
-        slug: data.slug,
-        content: data.content,
-        excerpt: data.excerpt,
-        metaTitle: data.metaTitle,
-        metaDesc: data.metaDesc,
-        status: data.status,
-        featured: data.featured,
-        categoryId: data.categoryId,
-        ...(data.status === 'PUBLISHED' ? { publishedAt: new Date() } : {}),
-      },
     })
-    
-    // Invalida cache da categoria desse artigo, hub e artigo em si
-    revalidatePath('/ajuda')
-    revalidatePath(`/admin/artigos`)
-    revalidatePath(`/ajuda/[categoria]`, 'page')
-    revalidatePath(`/ajuda/[categoria]/[slug]`, 'page')
-
-    return { success: true, articleId: updated.id }
+    articleId = data.id
   } else {
     const created = await prisma.article.create({
       data: {
-        title: data.title,
-        slug: data.slug,
-        content: data.content,
-        excerpt: data.excerpt,
-        metaTitle: data.metaTitle,
-        metaDesc: data.metaDesc,
-        status: data.status,
-        featured: data.featured,
-        categoryId: data.categoryId,
+        ...payload,
         authorId: data.authorId,
-        ...(data.status === 'PUBLISHED' ? { publishedAt: new Date() } : {}),
+        supportBlocks: blocks.length > 0
+          ? {
+              create: blocks.map((b, i) => ({
+                order: i,
+                title: b.title.trim(),
+                badge: b.badge?.trim() || null,
+                content: b.content,
+              })),
+            }
+          : undefined,
       },
     })
-
-    revalidatePath('/ajuda')
-    revalidatePath(`/admin/artigos`)
-    revalidatePath(`/ajuda/[categoria]`, 'page')
-
-    return { success: true, articleId: created.id }
+    articleId = created.id
   }
+
+  revalidatePath('/ajuda')
+  revalidatePath('/admin/artigos')
+  revalidatePath(`/ajuda/[categoria]`, 'page')
+  revalidatePath(`/ajuda/[categoria]/[slug]`, 'page')
+
+  return { success: true, articleId }
 }
 
-/**
- * Exclui múltiplos artigos permanentemente
- */
 export async function deleteArticles(ids: string[]) {
   const session = await auth()
-  if (!session || session.user.role === 'VIEWER') {
+  if (!session || (session.user.role !== 'EDITOR' && session.user.role !== 'SUPER_ADMIN')) {
     throw new Error('Permissão negada.')
   }
 
-  // Se for redator, só pode apagar os próprios artigos
-  if (session.user.role === 'WRITER') {
-    await prisma.article.deleteMany({
-      where: {
-        id: { in: ids },
-        authorId: session.user.id
-      }
-    })
-  } else {
-    await prisma.article.deleteMany({
-      where: {
-        id: { in: ids }
-      }
-    })
-  }
+  await prisma.article.deleteMany({ where: { id: { in: ids } } })
 
   revalidatePath('/admin/artigos')
   return { success: true }

@@ -494,6 +494,121 @@ body {
 }
 .tc-back:hover { color: var(--ink); background: var(--surface-2); }
 
+/* ---------- SUPPORT (canned responses com blocos + variáveis) ---------- */
+.tc-support { display: flex; flex-direction: column; }
+
+.tc-support__varsBox {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 14px;
+  margin-bottom: 18px;
+}
+.tc-support__varsLbl {
+  font-size: 10.5px; font-weight: 700; color: var(--ink-3);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  font-family: var(--font-mono);
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+.tc-support__varsGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+@media (max-width: 700px) { .tc-support__varsGrid { grid-template-columns: 1fr; } }
+.tc-support__varField { display: flex; flex-direction: column; gap: 4px; }
+.tc-support__varKey { font-family: var(--font-mono); font-size: 10.5px; color: var(--purple-700); font-weight: 600; }
+.tc-support__varInput {
+  padding: 6px 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  font-family: inherit; font-size: 12.5px;
+  color: var(--ink); outline: none;
+}
+.tc-support__varInput:focus { border-color: var(--purple-500); box-shadow: 0 0 0 3px rgba(107,45,138,0.12); }
+
+.tc-support__block { margin-top: 22px; }
+.tc-support__block:first-of-type { margin-top: 0; }
+.tc-support__blockHead { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.tc-support__blockNum {
+  width: 22px; height: 22px; border-radius: 5px;
+  background: var(--purple-700); color: var(--lime);
+  display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+}
+.tc-support__blockTitle { font-size: 13.5px; font-weight: 700; color: var(--ink); flex: 1; }
+.tc-support__blockBadge {
+  font-size: 10px; font-weight: 700; color: var(--ink-3);
+  font-family: var(--font-mono); letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.tc-support__blockBody {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface-2);
+  padding: 14px 16px;
+  font-size: 14px; line-height: 1.65;
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+.tc-support__copyBtn {
+  position: absolute; top: 10px; right: 10px;
+  padding: 5px 10px; border-radius: 6px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--ink-2);
+  font-size: 11px; font-weight: 700;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+.tc-support__copyBtn.is-copied {
+  border-color: #cee68a;
+  background: var(--lime-bg);
+  color: var(--lime-dark);
+}
+.tc-support__varSpan {
+  display: inline-block;
+  background: rgba(201,242,94,0.25);
+  color: var(--ink);
+  font-weight: 700;
+  padding: 0 4px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  border: 1px solid rgba(110,138,26,0.2);
+}
+.tc-support__final {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 22px;
+  padding: 14px 16px;
+  background: var(--purple-50);
+  border: 1px solid var(--purple-100);
+  border-left: 3px solid var(--purple-600);
+  border-radius: 9px;
+}
+.tc-support__primaryBtn {
+  padding: 9px 16px; border-radius: 7px;
+  background: var(--purple-700); color: #fff;
+  border: none; cursor: pointer;
+  font-size: 12.5px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: inherit;
+}
+.tc-support__primaryBtn:hover { background: var(--purple-800); }
+
+/* Type badge na lista admin */
+.tc-typeBadge {
+  display: inline-flex; align-items: center;
+  font-size: 10px; font-weight: 700;
+  padding: 3px 7px; border-radius: 5px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  font-family: var(--font-mono);
+}
+.tc-typeBadge--text { background: var(--blue-bg); color: #1d4ed8; }
+.tc-typeBadge--support { background: var(--purple-100); color: var(--purple-700); }
+.tc-typeBadge--video { background: var(--amber-bg); color: #92400e; }
+
 /* SEARCH EMPTY */
 .tc-searchEmpty { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 40px; text-align: center; }
 .tc-searchEmpty__title { font-size: 16px; font-weight: 700; color: var(--ink); margin: 0 0 6px; }
