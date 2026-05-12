@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Topbar } from '@/components/public/Topbar'
+import { Icon } from '@/components/public/Icon'
+import { iconForSlug } from '@/lib/categoryIcon'
 import { buildCategoryMetadata } from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
@@ -62,7 +64,9 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
       <div className="tc-page">
         <div className="tc-catHeader">
-          <div className="tc-catHeader__iconBig">{category.icon || '📁'}</div>
+          <div className="tc-catHeader__iconBig">
+            <Icon name={iconForSlug(category.slug)} size={26} strokeWidth={1.8} />
+          </div>
           <div style={{ flex: 1 }}>
             <h1 className="tc-catHeader__title">{category.name}</h1>
             {category.description && <p className="tc-catHeader__desc">{category.description}</p>}

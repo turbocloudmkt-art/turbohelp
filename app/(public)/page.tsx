@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Topbar } from '@/components/public/Topbar'
+import { Icon } from '@/components/public/Icon'
+import { iconForSlug } from '@/lib/categoryIcon'
 import { buildHubMetadata } from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
@@ -156,7 +158,9 @@ export default async function HubPage() {
             {categories.map((cat) => (
               <Link key={cat.id} href={`/ajuda/${cat.slug}`} className="tc-catCard">
                 <div className="tc-catCard__head">
-                  <div className="tc-catCard__iconBox">{cat.icon || '📁'}</div>
+                  <div className="tc-catCard__iconBox">
+                    <Icon name={iconForSlug(cat.slug)} size={18} strokeWidth={1.9} />
+                  </div>
                   <div style={{ flex: 1 }}>
                     <div className="tc-catCard__name">{cat.name}</div>
                     <div className="tc-catCard__count">

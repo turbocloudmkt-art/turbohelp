@@ -175,6 +175,20 @@ body {
 }
 .tc-sb__navItem:hover { background: rgba(255,255,255,0.04); color: #fff; }
 .tc-sb__navItem.is-active { background: rgba(201,242,94,0.12); color: #fff; font-weight: 600; border-left-color: var(--lime); margin-left: 0; padding-left: 10px; }
+.tc-sb__navItem--mock { cursor: default; opacity: 0.85; }
+.tc-sb__navItem--mock:hover { background: rgba(255,255,255,0.02); color: #d4c5dc; }
+.tc-sb__navBadge {
+  margin-left: auto;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: #9379a8;
+  font-weight: 600;
+  background: rgba(255,255,255,0.04);
+  padding: 2px 6px;
+  border-radius: 4px;
+  min-width: 22px;
+  text-align: center;
+}
 
 .tc-sb__cats { display: flex; flex-direction: column; gap: 1px; padding: 0 4px; }
 .tc-sb__catRow {
