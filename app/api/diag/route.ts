@@ -2,16 +2,15 @@ import { NextResponse } from 'next/server'
 import { compare } from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 
-// Rota de DEBUG temporária — REMOVER após diagnóstico.
-// Protegida por chave hardcoded; será deletada antes de qualquer uso real.
-const DEBUG_KEY = 'th-dbg-9f7a3e4b2c1d-2026'
+// Rota de DIAGNOSTICO temporaria — REMOVER apos uso.
+const DIAG_KEY = 'th-dbg-9f7a3e4b2c1d-2026'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 export async function GET(req: Request) {
   const url = new URL(req.url)
-  if (url.searchParams.get('key') !== DEBUG_KEY) {
+  if (url.searchParams.get('key') !== DIAG_KEY) {
     return new NextResponse('forbidden', { status: 403 })
   }
 
