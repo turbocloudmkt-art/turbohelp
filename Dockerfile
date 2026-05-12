@@ -48,6 +48,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
+# Prisma engine binário não é incluído no output standalone do Next.
+# Copiar manualmente, senão Prisma Client falha em runtime com "Cannot find module .prisma/client".
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+
 RUN mkdir -p /app/public/uploads/images
 RUN chown -R nextjs:nodejs /app/public/uploads
 
