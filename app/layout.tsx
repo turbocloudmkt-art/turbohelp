@@ -1,13 +1,11 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import JsonLd from '@/components/public/JsonLd'
-import { organizationSchema, siteLinksSearchBoxSchema } from '@/lib/schema'
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://ajuda.turbocloud.com.br'
+import './globals-tc.css'
 
 export const metadata: Metadata = {
-  title: 'TurboCloud Ajuda',
-  description: 'Base de conhecimento da TurboCloud — hospedagem WordPress de alta performance e VPS.',
+  title: 'TurboCloud Ajuda — Interno',
+  description: 'Base de conhecimento interna da TurboCloud.',
+  robots: { index: false, follow: false },
 }
 
 export default function RootLayout({
@@ -20,13 +18,9 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
-      <body>
-        <JsonLd data={organizationSchema(SITE_URL)} />
-        <JsonLd data={siteLinksSearchBoxSchema(SITE_URL)} />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   )
 }

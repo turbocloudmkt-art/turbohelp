@@ -1,12 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
-import { auth } from '@/lib/auth'
-import Header from '@/components/public/Header'
-import Footer from '@/components/public/Footer'
-import Breadcrumb from '@/components/public/Breadcrumb'
-import SearchBar from '@/components/public/SearchBar'
+import { Topbar } from '@/components/public/Topbar'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,23 +22,10 @@ interface Props {
   searchParams: { q?: string }
 }
 
-const MAIN_CATEGORIES = [
-  { name: 'Primeiros Passos', slug: 'primeiros-passos' },
-  { name: 'WordPress', slug: 'wordpress' },
-  { name: 'Domínios e DNS', slug: 'dominios-dns' },
-  { name: 'VPS e Projetos', slug: 'vps' },
-  { name: 'Segurança e Backup', slug: 'seguranca-backup' },
-  { name: 'E-mail', slug: 'email' },
-]
-
 export default async function BuscaPage({ searchParams }: Props) {
-  const session = await auth()
-  if (!session) redirect('/login')
-
   const query = (searchParams.q ?? '').trim()
 
   let results: SearchResult[] = []
-
   if (query.length >= 2) {
     results = await prisma.$queryRaw<SearchResult[]>`
       SELECT id, title, slug, excerpt, "categoryId"
@@ -69,128 +51,66 @@ export default async function BuscaPage({ searchParams }: Props) {
   const categoryMap = new Map(categories.map((c) => [c.id, c]))
 
   return (
-    <div className="page-wrapper">
-      <Header user={{ name: session.user.name, role: session.user.role }} />
+    <>
+      <Topbar crumbs={[{ label: 'Busca' }]} initialQuery={query} />
 
-      <main className="page-content">
-        <div className="container" style={{ maxWidth: '800px' }}>
-          <Breadcrumb
-            items={[
-              { label: 'Início', href: '/' },
-              { label: 'Busca' },
-            ]}
-          />
+      <div className="tc-page">
+        <h1 style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--ink)', margin: '0 0 18px' }}>
+          {query ? <>Resultados para <span className="mono" style={{ background: 'var(--surface-2)', padding: '2px 8px', borderRadius: 6, fontSize: 18 }}>&quot;{query}&quot;</span></> : 'Buscar artigos'}
+        </h1>
 
-          <h1
-            style={{
-              fontSize: '28px',
-              fontWeight: 800,
-              color: 'var(--text-primary)',
-              marginBottom: '20px',
-            }}
-          >
-            {query ? `Resultados para "${query}"` : 'Buscar artigos'}
-          </h1>
-
-          <div style={{ marginBottom: '32px' }}>
-            <SearchBar defaultValue={query} />
+        {query.length > 0 && query.length < 2 && (
+          <div className="tc-searchEmpty">
+            <p className="tc-searchEmpty__title">Digite pelo menos 2 caracteres</p>
+            <p className="tc-searchEmpty__text">A busca precisa de no mínimo 2 caracteres para retornar resultados.</p>
           </div>
+        )}
 
-          {query.length > 0 && query.length < 2 && (
-            <p style={{ color: 'var(--text-secondary)' }}>
-              Digite pelo menos 2 caracteres para buscar.
+        {query.length >= 2 && results.length === 0 && (
+          <div className="tc-searchEmpty">
+            <p className="tc-searchEmpty__title">Nenhum resultado para &ldquo;{query}&rdquo;</p>
+            <p className="tc-searchEmpty__text">Tente outras palavras-chave ou volte à página inicial.</p>
+            <Link href="/" className="tc-pagination__link">← Voltar à base</Link>
+          </div>
+        )}
+
+        {results.length > 0 && (
+          <>
+            <p className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: 12 }}>
+              {results.length} resultado{results.length !== 1 ? 's' : ''}
             </p>
-          )}
-
-          {query.length >= 2 && results.length === 0 && (
-            <div className="search-empty">
-              <p className="search-empty__title">
-                Nenhum resultado para &ldquo;{query}&rdquo;
-              </p>
-              <p className="search-empty__text">
-                Tente outras palavras-chave ou navegue pelas categorias abaixo.
-              </p>
-              <div className="search-empty__categories">
-                {MAIN_CATEGORIES.map((cat) => (
+            <div className="tc-artList">
+              <div className="tc-artList__head">
+                <span>Artigo</span>
+                <span>Categoria</span>
+                <span></span>
+                <span></span>
+              </div>
+              {results.map((r) => {
+                const category = categoryMap.get(r.categoryId)
+                if (!category) return null
+                return (
                   <Link
-                    key={cat.slug}
-                    href={`/ajuda/${cat.slug}`}
-                    className="btn-secondary"
+                    key={r.id}
+                    href={`/ajuda/${category.slug}/${r.slug}`}
+                    className="tc-artList__row"
                   >
-                    {cat.name}
+                    <div>
+                      <div className="tc-artList__title">{r.title}</div>
+                      {r.excerpt && <div className="tc-artList__excerpt">{r.excerpt}</div>}
+                    </div>
+                    <span className="tc-artList__cell">{category.name}</span>
+                    <span />
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-4)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m9 6 6 6-6 6" />
+                    </svg>
                   </Link>
-                ))}
-              </div>
+                )
+              })}
             </div>
-          )}
-
-          {results.length > 0 && (
-            <>
-              <p className="search-results-count">
-                {results.length} resultado
-                {results.length !== 1 ? 's' : ''} encontrado
-                {results.length !== 1 ? 's' : ''}
-              </p>
-              <div className="articles-list">
-                {results.map((result) => {
-                  const category = categoryMap.get(result.categoryId)
-                  return (
-                    <Link
-                      key={result.id}
-                      href={
-                        category
-                          ? `/ajuda/${category.slug}/${result.slug}`
-                          : '#'
-                      }
-                      className="article-card"
-                    >
-                      {category && (
-                        <div className="article-card__category">
-                          {category.name}
-                        </div>
-                      )}
-                      <div className="article-card__title">{result.title}</div>
-                      {result.excerpt && (
-                        <div className="article-card__excerpt">
-                          {result.excerpt}
-                        </div>
-                      )}
-                    </Link>
-                  )
-                })}
-              </div>
-            </>
-          )}
-
-          {!query && (
-            <div>
-              <p
-                style={{
-                  color: 'var(--text-secondary)',
-                  marginBottom: '20px',
-                  fontSize: '15px',
-                }}
-              >
-                Use a busca acima para encontrar artigos, tutoriais e
-                documentações. Ou navegue pelas categorias:
-              </p>
-              <div className="search-empty__categories">
-                {MAIN_CATEGORIES.map((cat) => (
-                  <Link
-                    key={cat.slug}
-                    href={`/ajuda/${cat.slug}`}
-                    className="btn-secondary"
-                  >
-                    {cat.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </main>
-
-      <Footer />
-    </div>
+          </>
+        )}
+      </div>
+    </>
   )
 }

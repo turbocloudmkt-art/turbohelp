@@ -1,25 +1,24 @@
 import { prisma } from '@/lib/prisma'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import type { Metadata } from 'next'
-import { auth } from '@/lib/auth'
-import Header from '@/components/public/Header'
-import Footer from '@/components/public/Footer'
-import Breadcrumb from '@/components/public/Breadcrumb'
-import ArticleCard from '@/components/public/ArticleCard'
-import JsonLd from '@/components/public/JsonLd'
+import { Topbar } from '@/components/public/Topbar'
 import ViewsTracker from '@/components/public/ViewsTracker'
 import FeedbackWidget from '@/components/public/FeedbackWidget'
-import TableOfContents from '@/components/public/TableOfContents'
 import { buildArticleMetadata } from '@/lib/seo'
-import { articleSchema, breadcrumbSchema } from '@/lib/schema'
 import { addHeadingIds } from '@/lib/htmlUtils'
 
 export const dynamic = 'force-dynamic'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://ajuda.turbocloud.com.br'
-
 interface Props {
   params: { categoria: string; slug: string }
+}
+
+function formatDate(d: Date | null): string {
+  if (!d) return '—'
+  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+    .format(d)
+    .replace(/\./g, '')
 }
 
 function estimateReadingTime(html: string): number {
@@ -30,157 +29,110 @@ function estimateReadingTime(html: string): number {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const article = await prisma.article.findFirst({
-    where: {
-      slug: params.slug,
-      status: 'PUBLISHED',
-      category: { slug: params.categoria },
-    },
+    where: { slug: params.slug, status: 'PUBLISHED', category: { slug: params.categoria } },
     include: { category: true },
   })
-
-  if (!article) {
-    return { title: 'Artigo não encontrado | TurboCloud Ajuda' }
-  }
-
+  if (!article) return { title: 'Artigo não encontrado | TurboCloud Ajuda' }
   return buildArticleMetadata(article, article.category)
 }
 
 export default async function ArticlePage({ params }: Props) {
-  const session = await auth()
-  if (!session) redirect('/login')
-
   const article = await prisma.article.findFirst({
-    where: {
-      slug: params.slug,
-      status: 'PUBLISHED',
-      category: { slug: params.categoria },
-    },
+    where: { slug: params.slug, status: 'PUBLISHED', category: { slug: params.categoria } },
     include: {
       category: true,
       author: { select: { name: true } },
     },
   })
-
   if (!article) notFound()
 
   const readingTime = estimateReadingTime(article.content)
-
-  // Processa o HTML no servidor: adiciona ids nos headings para os
-  // links do TableOfContents funcionarem como âncoras (#heading-id)
   const contentWithIds = addHeadingIds(article.content)
 
-  const relatedArticles = await prisma.article.findMany({
-    where: {
-      categoryId: article.categoryId,
-      status: 'PUBLISHED',
-      id: { not: article.id },
-    },
+  const related = await prisma.article.findMany({
+    where: { categoryId: article.categoryId, status: 'PUBLISHED', id: { not: article.id } },
     orderBy: { views: 'desc' },
-    take: 4,
-    select: {
-      id: true,
-      title: true,
-      slug: true,
-      excerpt: true,
-      publishedAt: true,
-      category: { select: { slug: true, name: true } },
-    },
+    take: 5,
+    select: { id: true, title: true, slug: true, category: { select: { slug: true } } },
   })
 
-  const breadcrumbItems = [
-    { label: 'Início', href: SITE_URL },
-    { label: 'Ajuda', href: `${SITE_URL}/ajuda` },
-    { label: article.category.name, href: `${SITE_URL}/ajuda/${params.categoria}` },
-    { label: article.title, href: `${SITE_URL}/ajuda/${params.categoria}/${params.slug}` },
-  ]
-
   return (
-    <div className="page-wrapper">
-      <JsonLd data={articleSchema(article, article.category, SITE_URL)} />
-      <JsonLd data={breadcrumbSchema(breadcrumbItems)} />
+    <>
+      <Topbar
+        crumbs={[
+          { label: article.category.name, href: `/ajuda/${article.category.slug}` },
+          { label: article.title },
+        ]}
+      />
 
-      {/* Registra view no cliente sem bloquear SSR */}
       <ViewsTracker articleId={article.id} />
 
-      <Header user={{ name: session.user.name, role: session.user.role }} />
+      <div className="tc-artPage">
+        <Link href={`/ajuda/${article.category.slug}`} className="tc-back">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 12H5" />
+            <path d="m11 6-6 6 6 6" />
+          </svg>
+          Voltar à categoria
+        </Link>
 
-      <main className="page-content">
-        <div className="container">
-          <Breadcrumb
-            items={[
-              { label: 'Início', href: '/' },
-              {
-                label: article.category.name,
-                href: `/ajuda/${params.categoria}`,
-              },
-              { label: article.title },
-            ]}
-          />
-
-          {/* Layout de duas colunas no desktop: conteúdo + TOC lateral */}
-          <div className="article-layout">
-            <div className="article-layout__main">
-              <div className="article-header">
-                <h1 className="article-header__title">{article.title}</h1>
-
-                <div className="article-meta">
-                  <span className="article-meta__item">
-                    Por {article.author.name}
-                  </span>
-                  {article.publishedAt && (
-                    <time
-                      className="article-meta__item"
-                      dateTime={article.publishedAt.toISOString()}
-                    >
-                      {article.publishedAt.toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric',
-                      })}
-                    </time>
-                  )}
-                  <span className="article-meta__item">
-                    {readingTime} min de leitura
-                  </span>
-                </div>
+        <div className="tc-artPage__grid">
+          <div className="tc-artPage__main">
+            <div className="tc-artPage__head">
+              <div className="tc-artPage__metaRow">
+                <Link href={`/ajuda/${article.category.slug}`} className="tc-artPage__catLink">
+                  {article.category.name}
+                </Link>
               </div>
-
-              <div
-                className="article-body article-content"
-                dangerouslySetInnerHTML={{ __html: contentWithIds }}
-              />
-
-              <FeedbackWidget articleId={article.id} />
-
-              {relatedArticles.length > 0 && (
-                <div className="related-articles">
-                  <h2 className="related-articles__title">Artigos relacionados</h2>
-                  <div className="grid-articles">
-                    {relatedArticles.map((related) => (
-                      <ArticleCard
-                        key={related.id}
-                        title={related.title}
-                        slug={related.slug}
-                        categorySlug={related.category.slug}
-                        categoryName={related.category.name}
-                        excerpt={related.excerpt}
-                        publishedAt={related.publishedAt}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+              <h1 className="tc-artPage__title">{article.title}</h1>
+              {article.excerpt && <p className="tc-artPage__desc">{article.excerpt}</p>}
             </div>
 
-            {/* TOC lateral — renderiza só se houver 3+ h2 (lógica interna ao componente) */}
-            <aside className="article-layout__toc">
-              <TableOfContents content={contentWithIds} />
-            </aside>
+            <div
+              className="tc-artPage__body"
+              dangerouslySetInnerHTML={{ __html: contentWithIds }}
+            />
           </div>
-        </div>
-      </main>
 
-      <Footer />
-    </div>
+          <aside className="tc-artPage__side">
+            <div className="tc-artPage__sideCard">
+              <div className="tc-artPage__sideLabel">Detalhes</div>
+              <div className="tc-artPage__metaList">
+                <span className="tc-artPage__metaKey">Tempo</span>
+                <span className="tc-artPage__metaVal">{readingTime} min</span>
+                <span className="tc-artPage__metaKey">Views</span>
+                <span className="tc-artPage__metaVal">{article.views.toLocaleString('pt-BR')}</span>
+                <span className="tc-artPage__metaKey">Atualizado</span>
+                <span className="tc-artPage__metaVal">{formatDate(article.updatedAt)}</span>
+                <span className="tc-artPage__metaKey">Autor</span>
+                <span className="tc-artPage__metaVal" style={{ fontFamily: 'inherit', textTransform: 'none', letterSpacing: 0 }}>{article.author.name}</span>
+              </div>
+            </div>
+
+            {related.length > 0 && (
+              <div className="tc-artPage__sideCard">
+                <div className="tc-artPage__sideLabel">Artigos relacionados</div>
+                <div className="tc-artPage__related">
+                  {related.map((r) => (
+                    <Link
+                      key={r.id}
+                      href={`/ajuda/${r.category.slug}/${r.slug}`}
+                      className="tc-artPage__relatedItem"
+                    >
+                      {r.title}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="tc-artPage__sideCard tc-artPage__feedbackBox">
+              <div className="tc-artPage__sideLabel">Esse artigo resolveu?</div>
+              <FeedbackWidget articleId={article.id} />
+            </div>
+          </aside>
+        </div>
+      </div>
+    </>
   )
 }

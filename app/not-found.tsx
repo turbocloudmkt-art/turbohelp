@@ -1,46 +1,48 @@
 import Link from 'next/link'
-import { auth } from '@/lib/auth'
-import Header from '@/components/public/Header'
-import Footer from '@/components/public/Footer'
 
-export default async function NotFound() {
-  const session = await auth()
-
+export default function NotFound() {
   return (
-    <div className="page-wrapper">
-      {session && (
-        <Header user={{ name: session.user.name, role: session.user.role }} />
-      )}
-
-      <main className="page-content">
-        <div className="container">
-          <div className="not-found">
-            <div className="not-found__code">404</div>
-            <h1 className="not-found__title">Página não encontrada</h1>
-            <p className="not-found__text">
-              A página que você procura não existe ou foi movida.
-              <br />
-              Tente navegar pela Central de Ajuda ou entre em contato com o
-              suporte.
-            </p>
-            <div className="not-found__actions">
-              <Link href="/" className="btn-primary">
-                Ir para Central de Ajuda
-              </Link>
-              <a
-                href="https://wa.me/5511940000000"
-                className="btn-secondary"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Falar com suporte
-              </a>
-            </div>
-          </div>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'var(--bg)',
+      padding: 24,
+    }}>
+      <div style={{ textAlign: 'center', maxWidth: 420 }}>
+        <div style={{
+          fontSize: 88,
+          fontWeight: 800,
+          color: 'var(--purple-700)',
+          lineHeight: 1,
+          marginBottom: 12,
+          fontFamily: 'var(--font-mono)',
+        }}>
+          404
         </div>
-      </main>
-
-      <Footer />
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--ink)', margin: '0 0 8px', letterSpacing: '-0.01em' }}>
+          Página não encontrada
+        </h1>
+        <p style={{ fontSize: 14, color: 'var(--ink-3)', margin: '0 0 22px', lineHeight: 1.55 }}>
+          A página que você procura não existe ou foi movida.
+        </p>
+        <Link
+          href="/"
+          style={{
+            display: 'inline-block',
+            padding: '10px 18px',
+            borderRadius: 9,
+            background: 'var(--purple-700)',
+            color: '#fff',
+            fontSize: 13.5,
+            fontWeight: 700,
+            textDecoration: 'none',
+          }}
+        >
+          Voltar à base
+        </Link>
+      </div>
     </div>
   )
 }

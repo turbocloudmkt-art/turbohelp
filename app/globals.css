@@ -4,39 +4,75 @@
 
 /* 1. CSS Variables ----------------------------------------- */
 :root {
-  --color-primary:        #42094F;
-  --color-primary-light:  #f3e8f6;
-  --color-primary-dark:   #2d0636;
-  --color-accent:         #6bdd12;
-  --color-accent-dark:    #56b50e;
+  /* ── NOVO design system (Manrope + purple-900/lime) ── */
+  --bg:             #f7f5f9;
+  --surface:        #ffffff;
+  --surface-2:      #faf8fb;
+  --border:         #e8e3ed;
+  --border-strong:  #d8d1df;
+  --ink:            #1a0f24;
+  --ink-2:          #4a3d56;
+  --ink-3:          #7a6b87;
+  --ink-4:          #a59cae;
+  --purple-50:      #f5eff8;
+  --purple-100:     #eadcf1;
+  --purple-200:     #d3b6e1;
+  --purple-500:     #6b2d8a;
+  --purple-600:     #56206f;
+  --purple-700:     #421858;
+  --purple-800:     #2e0f3f;
+  --purple-900:     #1e0a2c;
+  --lime:           #c9f25e;
+  --lime-2:         #b8e64a;
+  --lime-dark:      #6e8a1a;
+  --lime-bg:        #f0fad4;
+  --amber:          #f59e0b;
+  --amber-bg:       #fef3c7;
+  --rose:           #e11d48;
+  --rose-bg:        #ffe4e6;
+  --teal:           #0d9488;
+  --teal-bg:        #ccfbf1;
+  --blue:           #2563eb;
+  --blue-bg:        #dbeafe;
+  --font-sans:      'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:      'JetBrains Mono', monospace;
+
+  /* ── ANTIGOS (mantidos para o painel admin continuar funcionando) ── */
+  --color-primary:        #421858;
+  --color-primary-light:  #f5eff8;
+  --color-primary-dark:   #2e0f3f;
+  --color-accent:         #c9f25e;
+  --color-accent-dark:    #6e8a1a;
 
   --bg-primary:           #ffffff;
-  --bg-secondary:         #f5f5f7;
+  --bg-secondary:         #f7f5f9;
   --bg-card:              #ffffff;
 
-  --text-primary:         #1a1a1a;
-  --text-secondary:       #444444;
-  --text-tertiary:        #666666;
+  --text-primary:         #1a0f24;
+  --text-secondary:       #4a3d56;
+  --text-tertiary:        #7a6b87;
 
-  --color-border:         #e0e0e0;
-  --color-border-focus:   #42094F;
+  --color-border:         #e8e3ed;
+  --color-border-focus:   #421858;
   --color-danger:         #dc2626;
 
-  --shadow-sm:  0 2px 8px rgba(0, 0, 0, 0.06);
-  --shadow-md:  0 4px 16px rgba(0, 0, 0, 0.08);
-  --shadow-lg:  0 12px 32px rgba(0, 0, 0, 0.10);
+  --shadow-sm:  0 1px 2px rgba(30, 10, 44, 0.04);
+  --shadow-md:  0 2px 8px rgba(30, 10, 44, 0.06);
+  --shadow-lg:  0 8px 24px rgba(30, 10, 44, 0.08);
 
   --radius:               8px;
-  --font-family:          'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family:          var(--font-sans);
 
-  /* Extras — usados apenas internamente neste arquivo */
   --color-code-text:      #c7254e;
   --color-code-block-bg:  #1e1e1e;
   --color-code-block-fg:  #d4d4d4;
 
-  --container-max:        1200px;
-  --container-px:         24px;
+  --container-max:        1280px;
+  --container-px:         28px;
 }
+
+.mono { font-family: var(--font-mono); }
+::selection { background: var(--lime); color: var(--purple-900); }
 
 /* 2. Reset ------------------------------------------------- */
 *,

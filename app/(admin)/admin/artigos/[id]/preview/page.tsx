@@ -1,14 +1,12 @@
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import type { Metadata } from 'next'
-import Header from '@/components/public/Header'
-import Footer from '@/components/public/Footer'
-import Breadcrumb from '@/components/public/Breadcrumb'
 import { addHeadingIds } from '@/lib/htmlUtils'
 import { auth } from '@/lib/auth'
 
 export const metadata: Metadata = {
-  title: 'Visualização de Rascunho | TurboCloud Admin'
+  title: 'Visualização de Rascunho | TurboCloud Admin',
 }
 
 interface Props {
@@ -23,84 +21,77 @@ function estimateReadingTime(html: string): number {
 
 export default async function ArticlePreviewPage({ params }: Props) {
   const session = await auth()
-  
-  if (!session) {
-    return <div>Não autorizado</div>
-  }
+  if (!session) return <div>Não autorizado</div>
 
   const article = await prisma.article.findUnique({
-    where: {
-      id: params.id,
-    },
+    where: { id: params.id },
     include: {
       category: true,
       author: { select: { name: true } },
     },
   })
-
   if (!article) notFound()
 
   const readingTime = estimateReadingTime(article.content)
-
   const contentWithIds = addHeadingIds(article.content)
 
   return (
-    <div className="page-wrapper">
-      <div style={{ backgroundColor: 'var(--color-danger)', color: '#fff', textAlign: 'center', padding: '12px', fontWeight: 'bold', fontSize: '14px', position: 'sticky', top: 0, zIndex: 9999 }}>
-        ⚠️ MODO DE VISUALIZAÇÃO RESTRITA: VOCÊ ESTÁ VISUALIZANDO UM CONTEÚDO QUE PODE AINDA NÃO ESTAR PUBLICADO.
+    <div>
+      <div style={{
+        backgroundColor: 'var(--rose)',
+        color: '#fff',
+        textAlign: 'center',
+        padding: '10px 14px',
+        fontWeight: 700,
+        fontSize: 12,
+        letterSpacing: '0.04em',
+        textTransform: 'uppercase',
+        fontFamily: 'var(--font-mono)',
+        marginBottom: 18,
+        borderRadius: 8,
+      }}>
+        ⚠️ Modo de visualização — status atual: {article.status}
       </div>
-      
-      <Header user={{ name: session.user.name, role: session.user.role }} />
 
-      <main className="page-content">
-        <div className="container">
-          <Breadcrumb
-            items={[
-              { label: 'Início', href: '/' },
-              {
-                label: article.category.name,
-                href: `/ajuda/${article.category.slug}`,
-              },
-              { label: article.title },
-            ]}
-          />
+      <Link
+        href="/admin/artigos"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+          fontSize: 12,
+          color: 'var(--ink-3)',
+          fontWeight: 600,
+          padding: '6px 10px 6px 6px',
+          borderRadius: 6,
+          fontFamily: 'var(--font-mono)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
+          textDecoration: 'none',
+          marginBottom: 14,
+        }}
+      >
+        ← Voltar aos artigos
+      </Link>
 
-          <div className="article-layout">
-            <div className="article-layout__main">
-              <div className="article-header">
-                <h1 className="article-header__title">{article.title}</h1>
-
-                <div className="article-meta">
-                  <span className="article-meta__item">
-                    Por {article.author.name}
-                  </span>
-                  {article.updatedAt && (
-                    <time
-                      className="article-meta__item"
-                    >
-                      Última edição: {article.updatedAt.toLocaleDateString('pt-BR')}
-                    </time>
-                  )}
-                  <span className="article-meta__item">
-                    {readingTime} min de leitura
-                  </span>
-                  <span style={{ backgroundColor: 'rgba(0,0,0,0.1)', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>
-                    Status Atual: {article.status}
-                  </span>
-                </div>
-              </div>
-
-              <div
-                className="article-body article-content"
-                dangerouslySetInnerHTML={{ __html: contentWithIds }}
-              />
-
-            </div>
+      <div className="tc-artPage__main">
+        <div className="tc-artPage__head">
+          <div className="tc-artPage__metaRow">
+            <span className="tc-artPage__catLink">{article.category.name}</span>
+          </div>
+          <h1 className="tc-artPage__title">{article.title}</h1>
+          {article.excerpt && <p className="tc-artPage__desc">{article.excerpt}</p>}
+          <div style={{ marginTop: 12, display: 'flex', gap: 14, fontSize: 12, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>
+            <span>Por {article.author.name}</span>
+            <span>{readingTime} min de leitura</span>
           </div>
         </div>
-      </main>
 
-      <Footer />
+        <div
+          className="tc-artPage__body"
+          dangerouslySetInnerHTML={{ __html: contentWithIds }}
+        />
+      </div>
     </div>
   )
 }

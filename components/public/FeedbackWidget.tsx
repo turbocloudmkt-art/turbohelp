@@ -11,7 +11,6 @@ type State = 'idle' | 'submitting' | 'done'
 export default function FeedbackWidget({ articleId }: Props) {
   const [widgetState, setWidgetState] = useState<State>('idle')
 
-  // Verifica se o usuário já votou nesta sessão
   useEffect(() => {
     if (sessionStorage.getItem(`feedback_${articleId}`)) {
       setWidgetState('done')
@@ -20,9 +19,7 @@ export default function FeedbackWidget({ articleId }: Props) {
 
   async function handleVote(helpful: boolean) {
     if (widgetState !== 'idle') return
-
     setWidgetState('submitting')
-
     try {
       await fetch('/api/feedback', {
         method: 'POST',
@@ -32,44 +29,44 @@ export default function FeedbackWidget({ articleId }: Props) {
     } catch {
       // Falha silenciosa — feedback não é crítico
     }
-
     sessionStorage.setItem(`feedback_${articleId}`, '1')
     setWidgetState('done')
   }
 
   if (widgetState === 'done') {
     return (
-      <div className="feedback-widget feedback-widget--done">
-        <p className="feedback-widget__thanks">
-          Obrigado pelo seu feedback!
-        </p>
-      </div>
+      <p style={{ fontSize: 12, color: 'var(--ink-2)', margin: 0, fontWeight: 600 }}>
+        Obrigado pelo seu feedback!
+      </p>
     )
   }
 
   return (
-    <div className="feedback-widget">
-      <p className="feedback-widget__question">Este artigo foi útil?</p>
-      <div className="feedback-widget__actions">
-        <button
-          type="button"
-          className="feedback-widget__btn feedback-widget__btn--yes"
-          onClick={() => handleVote(true)}
-          disabled={widgetState === 'submitting'}
-          aria-label="Sim, este artigo foi útil"
-        >
-          👍 Sim
-        </button>
-        <button
-          type="button"
-          className="feedback-widget__btn feedback-widget__btn--no"
-          onClick={() => handleVote(false)}
-          disabled={widgetState === 'submitting'}
-          aria-label="Não, este artigo não foi útil"
-        >
-          👎 Não
-        </button>
-      </div>
+    <div className="tc-artPage__feedbackBtns">
+      <button
+        type="button"
+        className="tc-artPage__feedbackBtn"
+        onClick={() => handleVote(true)}
+        disabled={widgetState === 'submitting'}
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M7 10v12" />
+          <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H7a2 2 0 0 1-2-2V12a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11l1.86-3.72A1 1 0 0 1 12.31 5h.31a2 2 0 0 1 2 2z" />
+        </svg>
+        Sim
+      </button>
+      <button
+        type="button"
+        className="tc-artPage__feedbackBtn"
+        onClick={() => handleVote(false)}
+        disabled={widgetState === 'submitting'}
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 14V2" />
+          <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H17a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11l-1.86 3.72A1 1 0 0 1 9.69 19h-.31a2 2 0 0 1-2-2z" />
+        </svg>
+        Não
+      </button>
     </div>
   )
 }
