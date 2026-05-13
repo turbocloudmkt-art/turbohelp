@@ -38,13 +38,15 @@ export function Sidebar({ user, categories, favoritesCount }: SidebarProps) {
   const canAccessAdmin = user.role !== 'VIEWER'
   const pathname = usePathname() ?? ''
 
-  let activeView: 'home' | 'category' | 'article' | 'favorites' | 'topviews' = 'home'
+  let activeView: 'home' | 'category' | 'article' | 'favorites' | 'topviews' | 'recent' = 'home'
   let activeCategorySlug: string | undefined
 
   if (pathname === '/ajuda/favoritos') {
     activeView = 'favorites'
   } else if (pathname === '/ajuda/mais-acessados') {
     activeView = 'topviews'
+  } else if (pathname === '/ajuda/recentes') {
+    activeView = 'recent'
   } else if (pathname.startsWith('/ajuda/')) {
     const parts = pathname.split('/').filter(Boolean)
     if (parts[1] && parts[1] !== 'busca') {
@@ -78,10 +80,13 @@ export function Sidebar({ user, categories, favoritesCount }: SidebarProps) {
             <span>Mais acessados</span>
             <span className="tc-sb__navBadge">7d</span>
           </Link>
-          <span className="tc-sb__navItem tc-sb__navItem--mock" aria-disabled="true">
+          <Link
+            href="/ajuda/recentes"
+            className={`tc-sb__navItem ${activeView === 'recent' ? 'is-active' : ''}`}
+          >
             <Icon name="clock" size={16} />
             <span>Recentes</span>
-          </span>
+          </Link>
           <Link
             href="/ajuda/favoritos"
             className={`tc-sb__navItem ${activeView === 'favorites' ? 'is-active' : ''}`}
