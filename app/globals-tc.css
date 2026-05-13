@@ -481,6 +481,22 @@ body {
 }
 .tc-artPage__feedbackBtn:hover { border-color: var(--purple-200); }
 
+/* FAVORITE BUTTON */
+.tc-artPage__headRow { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.tc-favBtn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: 8px;
+  border: 1px solid var(--border); background: #fff;
+  font-size: 12px; font-weight: 600; color: var(--ink-2);
+  cursor: pointer; font-family: inherit;
+  flex-shrink: 0;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+.tc-favBtn:hover:not(:disabled) { border-color: var(--purple-300); color: var(--purple-700); }
+.tc-favBtn:disabled { opacity: 0.6; cursor: default; }
+.tc-favBtn.is-on { background: var(--purple-50); border-color: var(--purple-300); color: var(--purple-700); }
+.tc-favBtn.is-on svg { fill: var(--purple-500); }
+
 /* BACK LINK */
 .tc-back {
   display: inline-flex; align-items: center; gap: 6px;

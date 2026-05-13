@@ -17,6 +17,7 @@ interface Category {
 interface SidebarProps {
   user: { name: string; role: UserRole }
   categories: Category[]
+  favoritesCount: number
 }
 
 const roleLabel: Record<UserRole, string> = {
@@ -33,14 +34,16 @@ function initials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
-export function Sidebar({ user, categories }: SidebarProps) {
+export function Sidebar({ user, categories, favoritesCount }: SidebarProps) {
   const canAccessAdmin = user.role !== 'VIEWER'
   const pathname = usePathname() ?? ''
 
-  let activeView: 'home' | 'category' | 'article' = 'home'
+  let activeView: 'home' | 'category' | 'article' | 'favorites' = 'home'
   let activeCategorySlug: string | undefined
 
-  if (pathname.startsWith('/ajuda/')) {
+  if (pathname === '/ajuda/favoritos') {
+    activeView = 'favorites'
+  } else if (pathname.startsWith('/ajuda/')) {
     const parts = pathname.split('/').filter(Boolean)
     if (parts[1] && parts[1] !== 'busca') {
       activeCategorySlug = parts[1]
@@ -75,11 +78,14 @@ export function Sidebar({ user, categories }: SidebarProps) {
             <Icon name="clock" size={16} />
             <span>Recentes</span>
           </span>
-          <span className="tc-sb__navItem tc-sb__navItem--mock" aria-disabled="true">
+          <Link
+            href="/ajuda/favoritos"
+            className={`tc-sb__navItem ${activeView === 'favorites' ? 'is-active' : ''}`}
+          >
             <Icon name="bookmark" size={16} />
             <span>Meus favoritos</span>
-            <span className="tc-sb__navBadge">0</span>
-          </span>
+            <span className="tc-sb__navBadge">{favoritesCount}</span>
+          </Link>
         </div>
 
         <div className="tc-sb__sectionLabel">

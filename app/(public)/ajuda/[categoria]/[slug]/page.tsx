@@ -2,9 +2,11 @@ import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { auth } from '@/lib/auth'
 import { Topbar } from '@/components/public/Topbar'
 import ViewsTracker from '@/components/public/ViewsTracker'
 import FeedbackWidget from '@/components/public/FeedbackWidget'
+import { FavoriteButton } from '@/components/public/FavoriteButton'
 import { SupportRenderer } from '@/components/public/SupportRenderer'
 import { VideoEmbed } from '@/components/public/VideoEmbed'
 import { buildArticleMetadata } from '@/lib/seo'
@@ -39,6 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ArticlePage({ params }: Props) {
+  const session = await auth()
   const article = await prisma.article.findFirst({
     where: { slug: params.slug, status: 'PUBLISHED', category: { slug: params.categoria } },
     include: {
@@ -48,6 +51,15 @@ export default async function ArticlePage({ params }: Props) {
     },
   })
   if (!article) notFound()
+
+  const isFavorited = session
+    ? Boolean(
+        await prisma.favorite.findUnique({
+          where: { userId_articleId: { userId: session.user.id, articleId: article.id } },
+          select: { id: true },
+        }),
+      )
+    : false
 
   const readingTime = estimateReadingTime(article.content)
   const contentWithIds = addHeadingIds(article.content)
@@ -82,13 +94,18 @@ export default async function ArticlePage({ params }: Props) {
         <div className="tc-artPage__grid">
           <div className="tc-artPage__main">
             <div className="tc-artPage__head">
-              <div className="tc-artPage__metaRow">
-                <Link href={`/ajuda/${article.category.slug}`} className="tc-artPage__catLink">
-                  {article.category.name}
-                </Link>
+              <div className="tc-artPage__headRow">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="tc-artPage__metaRow">
+                    <Link href={`/ajuda/${article.category.slug}`} className="tc-artPage__catLink">
+                      {article.category.name}
+                    </Link>
+                  </div>
+                  <h1 className="tc-artPage__title">{article.title}</h1>
+                  {article.excerpt && <p className="tc-artPage__desc">{article.excerpt}</p>}
+                </div>
+                <FavoriteButton articleId={article.id} initialFavorited={isFavorited} />
               </div>
-              <h1 className="tc-artPage__title">{article.title}</h1>
-              {article.excerpt && <p className="tc-artPage__desc">{article.excerpt}</p>}
             </div>
 
             {article.type === 'SUPPORT' ? (
