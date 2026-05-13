@@ -27,14 +27,29 @@ export default async function BuscaPage({ searchParams }: Props) {
 
   let results: SearchResult[] = []
   if (query.length >= 2) {
+    const like = `%${query}%`
+    const prefix = `${query}%`
     results = await prisma.$queryRaw<SearchResult[]>`
       SELECT id, title, slug, excerpt, "categoryId"
       FROM articles
       WHERE status = 'PUBLISHED'
-      AND to_tsvector('portuguese', title || ' ' || content)
-          @@ plainto_tsquery('portuguese', ${query})
-      ORDER BY ts_rank(to_tsvector('portuguese', title || ' ' || content),
-                       plainto_tsquery('portuguese', ${query})) DESC
+      AND (
+        title ILIKE ${like}
+        OR excerpt ILIKE ${like}
+        OR content ILIKE ${like}
+        OR to_tsvector('portuguese', title || ' ' || content)
+           @@ plainto_tsquery('portuguese', ${query})
+      )
+      ORDER BY
+        CASE
+          WHEN title ILIKE ${prefix} THEN 0
+          WHEN title ILIKE ${like} THEN 1
+          WHEN excerpt ILIKE ${like} THEN 2
+          ELSE 3
+        END,
+        ts_rank(to_tsvector('portuguese', title || ' ' || content),
+                plainto_tsquery('portuguese', ${query})) DESC,
+        title ASC
       LIMIT 20
     `
   }

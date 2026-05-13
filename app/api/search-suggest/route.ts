@@ -24,6 +24,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ results: [] })
   }
 
+  const like = `%${q}%`
+  const prefix = `${q}%`
+
   const results = await prisma.$queryRaw<
     Array<{
       id: string
@@ -36,10 +39,20 @@ export async function GET(request: NextRequest) {
     SELECT id, title, slug, excerpt, "categoryId"
     FROM articles
     WHERE status = 'PUBLISHED'
-    AND to_tsvector('portuguese', title || ' ' || content)
-        @@ plainto_tsquery('portuguese', ${q})
-    ORDER BY ts_rank(to_tsvector('portuguese', title || ' ' || content),
-                     plainto_tsquery('portuguese', ${q})) DESC
+    AND (
+      title ILIKE ${like}
+      OR excerpt ILIKE ${like}
+      OR to_tsvector('portuguese', title || ' ' || content)
+         @@ plainto_tsquery('portuguese', ${q})
+    )
+    ORDER BY
+      CASE
+        WHEN title ILIKE ${prefix} THEN 0
+        WHEN title ILIKE ${like} THEN 1
+        WHEN excerpt ILIKE ${like} THEN 2
+        ELSE 3
+      END,
+      title ASC
     LIMIT 8
   `
 
