@@ -1,4 +1,7 @@
+'use client'
+
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { SignOutButton } from '@/components/public/SignOutButton'
 import { Icon } from '@/components/public/Icon'
 import { iconForSlug } from '@/lib/categoryIcon'
@@ -14,8 +17,6 @@ interface Category {
 interface SidebarProps {
   user: { name: string; role: UserRole }
   categories: Category[]
-  activeView?: 'home' | 'category' | 'article'
-  activeCategorySlug?: string
 }
 
 const roleLabel: Record<UserRole, string> = {
@@ -32,8 +33,20 @@ function initials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
-export function Sidebar({ user, categories, activeView = 'home', activeCategorySlug }: SidebarProps) {
+export function Sidebar({ user, categories }: SidebarProps) {
   const canAccessAdmin = user.role !== 'VIEWER'
+  const pathname = usePathname() ?? ''
+
+  let activeView: 'home' | 'category' | 'article' = 'home'
+  let activeCategorySlug: string | undefined
+
+  if (pathname.startsWith('/ajuda/')) {
+    const parts = pathname.split('/').filter(Boolean)
+    if (parts[1] && parts[1] !== 'busca') {
+      activeCategorySlug = parts[1]
+      activeView = parts.length >= 3 ? 'article' : 'category'
+    }
+  }
 
   return (
     <aside className="tc-sb">
