@@ -19,6 +19,7 @@ export function MediaGalleryClient({ medias }: Props) {
   const [isConverting, setIsConverting] = useState(false)
   const [convertResult, setConvertResult] = useState<{ newUrl: string; updatedArticles: number } | null>(null)
   const [convertError, setConvertError] = useState('')
+  const [isDeletingOne, setIsDeletingOne] = useState(false)
 
   const toggleSelectAll = () => {
     if (selectedFrags.length === medias.length) {
@@ -63,6 +64,22 @@ export function MediaGalleryClient({ medias }: Props) {
     setActiveMedia(null)
     setConvertResult(null)
     setConvertError('')
+  }
+
+  const handleDeleteOne = async () => {
+    if (!activeMedia) return
+    if (!confirm(`APAGAR DEFINITIVAMENTE "${activeMedia.name}"?\n\nArtigos que usarem esta imagem ficarão quebrados.`)) return
+
+    setIsDeletingOne(true)
+    try {
+      await deleteMedias([activeMedia.pathFragment])
+      closeDetail()
+      router.refresh()
+    } catch (err: any) {
+      alert('Erro: ' + err.message)
+    } finally {
+      setIsDeletingOne(false)
+    }
   }
 
   const handleConvert = async () => {
@@ -279,6 +296,24 @@ export function MediaGalleryClient({ medias }: Props) {
                     : convertResult
                     ? '✅ Concluído'
                     : '🔄 Converter para WebP (85%)'}
+                </button>
+                <button
+                  onClick={handleDeleteOne}
+                  disabled={isDeletingOne || isConverting}
+                  style={{
+                    padding: '12px 20px',
+                    backgroundColor: 'var(--color-danger)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    cursor: isDeletingOne || isConverting ? 'not-allowed' : 'pointer',
+                    opacity: isDeletingOne || isConverting ? 0.6 : 1,
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {isDeletingOne ? '⏳ Excluindo...' : '🗑 Excluir'}
                 </button>
                 <button
                   onClick={closeDetail}
