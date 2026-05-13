@@ -24,7 +24,6 @@ const navLinks = [
   { href: '/admin/artigos', label: 'Artigos', icon: '✎' },
   { href: '/admin/categorias', label: 'Categorias', icon: '⊞' },
   { href: '/admin/midias', label: 'Mídias', icon: '🖼️' },
-  { href: '/admin/destaques', label: 'Destaques', icon: '⭐' },
 ]
 
 const superAdminLinks = [
