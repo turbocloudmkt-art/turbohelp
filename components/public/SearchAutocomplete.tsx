@@ -58,7 +58,6 @@ export function SearchAutocomplete({ initialQuery = '' }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const lastFetchedQRef = useRef<string>('')
 
   // Snapshot do que tentamos por último (query + resultsCount no momento do fetch)
   // Usado para logar buscas sem resultado quando o usuário "termina a tentativa"
@@ -96,7 +95,6 @@ export function SearchAutocomplete({ initialQuery = '' }: Props) {
         return
       }
       const data = (await res.json()) as { results: Suggestion[] }
-      lastFetchedQRef.current = trimmed
       setResults(data.results)
       // Atualiza snapshot da "tentativa atual": se voltou vazio, marca como pendente de log
       pendingFailedRef.current = data.results.length === 0 ? trimmed : null
@@ -189,7 +187,7 @@ export function SearchAutocomplete({ initialQuery = '' }: Props) {
     }
   }
 
-  function handleClickResult(r: Suggestion) {
+  function handleClickResult() {
     // Clicou num resultado existente — não loga (foi sucesso)
     pendingFailedRef.current = null
     setOpen(false)
@@ -255,7 +253,7 @@ export function SearchAutocomplete({ initialQuery = '' }: Props) {
                   <Link
                     key={r.id}
                     href={`/ajuda/${r.categorySlug}/${r.slug}`}
-                    onClick={() => handleClickResult(r)}
+                    onClick={handleClickResult}
                     onMouseEnter={() => setActiveIdx(i)}
                     style={{
                       display: 'block',

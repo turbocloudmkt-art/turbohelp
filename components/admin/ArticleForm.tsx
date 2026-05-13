@@ -38,7 +38,6 @@ interface ArticleData {
 interface FormProps {
   article?: Partial<ArticleData>
   categories: CategoriaCompact[]
-  userRole: string
   authorId: string
 }
 
@@ -50,7 +49,7 @@ const TYPE_OPTIONS: { value: ArticleType; label: string; desc: string }[] = [
   { value: 'VIDEO', label: 'Vídeo', desc: 'YouTube/Vimeo + descrição' },
 ]
 
-export function ArticleForm({ article, categories, userRole, authorId }: FormProps) {
+export function ArticleForm({ article, categories, authorId }: FormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')

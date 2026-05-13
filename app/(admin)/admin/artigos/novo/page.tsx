@@ -30,7 +30,6 @@ export default async function NovoArtigoPage() {
 
       <ArticleForm
         categories={categories}
-        userRole={session.user.role}
         authorId={session.user.id}
       />
     </div>

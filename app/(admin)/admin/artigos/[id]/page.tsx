@@ -66,7 +66,6 @@ export default async function EditarArtigoPage({ params }: Props) {
           categoryId: article.categoryId,
         }}
         categories={categories}
-        userRole={session.user.role}
         authorId={session.user.id}
       />
     </div>
