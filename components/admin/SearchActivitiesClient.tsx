@@ -27,7 +27,7 @@ type FailedGroup = {
 type Stats = {
   totalAll: number
   totalFailed: number
-  eligibleGroups: number
+  canAnalyze: boolean
   windowDays: number
 }
 
@@ -64,8 +64,7 @@ export function SearchActivitiesClient({ recent, failedGroups, stats }: Props) {
   const [analysisError, setAnalysisError] = useState('')
   const [suggestions, setSuggestions] = useState<ContentSuggestion[] | null>(null)
   const [analysisMeta, setAnalysisMeta] = useState<{
-    considered: number
-    skipped: number
+    totalAnalyzed: number
   } | null>(null)
 
   const filteredRecent =
@@ -79,10 +78,7 @@ export function SearchActivitiesClient({ recent, failedGroups, stats }: Props) {
     try {
       const result = await analyzeSearchActivities()
       setSuggestions(result.suggestions)
-      setAnalysisMeta({
-        considered: result.groupsConsidered,
-        skipped: result.groupsSkipped,
-      })
+      setAnalysisMeta({ totalAnalyzed: result.totalAnalyzed })
       setTab('insights')
     } catch (err: any) {
       setAnalysisError(err?.message ?? 'Falha na análise.')
@@ -105,10 +101,10 @@ export function SearchActivitiesClient({ recent, failedGroups, stats }: Props) {
         <StatBox label={`Pesquisas (${stats.windowDays}d)`} value={stats.totalAll} />
         <StatBox label="Sem resultado" value={stats.totalFailed} accent="#dc2626" />
         <StatBox
-          label="Grupos elegíveis p/ IA"
-          value={stats.eligibleGroups}
+          label="Pronto para análise"
+          value={stats.canAnalyze ? stats.totalFailed : 0}
           accent="#0ea5e9"
-          hint="≥3 variações distintas"
+          hint={stats.canAnalyze ? 'Volume mínimo atingido' : 'Mín. 3 buscas sem resultado'}
         />
       </div>
 
@@ -138,9 +134,9 @@ export function SearchActivitiesClient({ recent, failedGroups, stats }: Props) {
             disabled={analyzing}
             className="btn-primary"
             title={
-              stats.eligibleGroups === 0
-                ? 'Nenhum grupo atinge o threshold de ≥3 variações distintas em 30d — análise retornará vazia'
-                : 'Analisar pesquisas sem resultado com Gemini Flash'
+              stats.canAnalyze
+                ? 'Analisar pesquisas sem resultado com Gemini Flash (agrupamento semântico)'
+                : 'Volume insuficiente (mín. 3 buscas sem resultado em 30d) — análise retornará vazia'
             }
             style={{ opacity: analyzing ? 0.6 : 1 }}
           >
@@ -207,7 +203,6 @@ export function SearchActivitiesClient({ recent, failedGroups, stats }: Props) {
                 <span>Última vez</span>
               </div>
               {failedGroups.map((g) => {
-                const eligible = g.variants.length >= 3
                 return (
                   <div
                     key={g.normalizedQ}
@@ -248,25 +243,7 @@ export function SearchActivitiesClient({ recent, failedGroups, stats }: Props) {
                         {g.variants.length > 4 && <> · +{g.variants.length - 4}</>}
                       </div>
                     </div>
-                    <span>
-                      {g.variants.length}{' '}
-                      {eligible && (
-                        <span
-                          title="Elegível para análise IA"
-                          style={{
-                            display: 'inline-block',
-                            marginLeft: 4,
-                            fontSize: 11,
-                            background: '#dcfce7',
-                            color: '#166534',
-                            padding: '1px 6px',
-                            borderRadius: 4,
-                          }}
-                        >
-                          IA
-                        </span>
-                      )}
-                    </span>
+                    <span>{g.variants.length}</span>
                     <span>{g.distinctUsers}</span>
                     <span style={{ fontWeight: 600 }}>{g.total}</span>
                     <span style={{ color: 'var(--text-tertiary)', fontSize: 13 }}>{formatDate(g.lastSeen)}</span>
@@ -388,17 +365,16 @@ export function SearchActivitiesClient({ recent, failedGroups, stats }: Props) {
                     borderRadius: 6,
                   }}
                 >
-                  {analysisMeta.considered} grupo(s) com ≥3 variações analisado(s) ·{' '}
-                  {analysisMeta.skipped} grupo(s) ignorado(s) por volume insuficiente
+                  {analysisMeta.totalAnalyzed} pesquisa(s) sem resultado analisada(s) pelo Gemini com agrupamento semântico
                 </div>
               )}
 
               {suggestions.length === 0 ? (
                 <EmptyState
                   message={
-                    analysisMeta && analysisMeta.considered === 0
-                      ? `Nenhum grupo elegível para análise (necessário ≥3 variações distintas em 30 dias). ${analysisMeta.skipped} grupo(s) sem resultado existem, mas não atingem o threshold de volume.`
-                      : 'A IA não encontrou padrões com intenção clara o suficiente para sugerir conteúdo.'
+                    analysisMeta && analysisMeta.totalAnalyzed < 3
+                      ? `Volume insuficiente: apenas ${analysisMeta.totalAnalyzed} pesquisa(s) sem resultado nos últimos 30 dias (mínimo: 3).`
+                      : 'A IA analisou as pesquisas mas não encontrou tema(s) com intenção clara e recorrente para sugerir conteúdo.'
                   }
                 />
               ) : (

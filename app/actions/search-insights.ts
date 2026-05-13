@@ -6,7 +6,7 @@ import { GoogleGenAI, Type, Schema } from '@google/genai'
 
 const RETENTION_DAYS = 60
 const WINDOW_DAYS = 30
-const MIN_DISTINCT_VARIANTS = 3
+const MIN_FAILED_SEARCHES = 3
 
 export type ContentSuggestion = {
   tema: string
@@ -36,14 +36,18 @@ export async function pruneOldSearchActivities() {
 }
 
 /**
- * Analisa pesquisas sem resultado dos últimos WINDOW_DAYS dias e pede ao Gemini
- * sugestões de conteúdo. Só envia grupos com ≥ MIN_DISTINCT_VARIANTS variações
- * distintas (queries diferentes que normalizam pro mesmo normalizedQ).
+ * Analisa pesquisas sem resultado dos últimos WINDOW_DAYS dias. O agrupamento
+ * semântico é delegado ao Gemini — manda a lista crua e a IA decide quais
+ * buscas representam o mesmo tema, ignora ruído e sugere conteúdo apenas para
+ * temas com intenção clara e recorrente.
+ *
+ * Threshold local: precisa de pelo menos MIN_FAILED_SEARCHES buscas sem
+ * resultado na janela para acionar a análise (proteção contra chamadas
+ * desnecessárias à API).
  */
 export async function analyzeSearchActivities(): Promise<{
   suggestions: ContentSuggestion[]
-  groupsConsidered: number
-  groupsSkipped: number
+  totalAnalyzed: number
 }> {
   const session = await auth()
   if (!session || session.user.role !== 'SUPER_ADMIN') {
@@ -57,90 +61,70 @@ export async function analyzeSearchActivities(): Promise<{
 
   const since = new Date(Date.now() - WINDOW_DAYS * 24 * 60 * 60 * 1000)
 
-  // Busca pesquisas sem resultado na janela
   const failed = await prisma.searchActivity.findMany({
     where: {
       resultsCount: 0,
       createdAt: { gte: since },
     },
-    select: { query: true, normalizedQ: true, createdAt: true, userId: true },
+    select: { query: true, userId: true, createdAt: true },
+    orderBy: { createdAt: 'desc' },
+    take: 500,
   })
 
-  // Agrupa por normalizedQ e exige ≥ MIN_DISTINCT_VARIANTS variações distintas
-  const groups = new Map<
-    string,
-    { variants: Set<string>; total: number; lastSeen: Date; users: Set<string> }
-  >()
-  for (const row of failed) {
-    const g = groups.get(row.normalizedQ) ?? {
-      variants: new Set<string>(),
-      total: 0,
-      lastSeen: row.createdAt,
-      users: new Set<string>(),
-    }
-    g.variants.add(row.query.trim())
-    g.total += 1
-    g.users.add(row.userId)
-    if (row.createdAt > g.lastSeen) g.lastSeen = row.createdAt
-    groups.set(row.normalizedQ, g)
+  if (failed.length < MIN_FAILED_SEARCHES) {
+    return { suggestions: [], totalAnalyzed: failed.length }
   }
 
-  let groupsConsidered = 0
-  let groupsSkipped = 0
-  const eligible: Array<{
-    normalizedQ: string
-    variants: string[]
-    total: number
-    distinctUsers: number
-  }> = []
-  for (const [normalizedQ, g] of groups) {
-    if (g.variants.size >= MIN_DISTINCT_VARIANTS) {
-      eligible.push({
-        normalizedQ,
-        variants: [...g.variants],
-        total: g.total,
-        distinctUsers: g.users.size,
-      })
-      groupsConsidered += 1
-    } else {
-      groupsSkipped += 1
-    }
+  // Compacta para o prompt: query + quantos usuários distintos a pesquisaram
+  const usersByQuery = new Map<string, Set<string>>()
+  const countByQuery = new Map<string, number>()
+  for (const r of failed) {
+    const q = r.query.trim()
+    if (!usersByQuery.has(q)) usersByQuery.set(q, new Set())
+    usersByQuery.get(q)!.add(r.userId)
+    countByQuery.set(q, (countByQuery.get(q) ?? 0) + 1)
   }
+  const compact = [...countByQuery.entries()].map(([query, total]) => ({
+    query,
+    total,
+    distinctUsers: usersByQuery.get(query)!.size,
+  }))
 
-  if (eligible.length === 0) {
-    return { suggestions: [], groupsConsidered: 0, groupsSkipped }
-  }
-
-  // Carrega títulos de artigos existentes (publicados) para evitar duplicidade
   const existingArticles = await prisma.article.findMany({
     where: { status: 'PUBLISHED' },
-    select: { title: true, slug: true },
-    take: 200,
+    select: { title: true },
+    take: 300,
   })
 
   const ai = new GoogleGenAI({ apiKey })
 
   const prompt = `
 Você é um analista de comportamento de busca em uma central de ajuda (knowledge base).
-Recebeu uma lista de PESQUISAS REALIZADAS POR USUÁRIOS QUE NÃO RETORNARAM RESULTADOS nos últimos ${WINDOW_DAYS} dias.
+Recebeu a lista bruta de PESQUISAS QUE NÃO RETORNARAM RESULTADOS nos últimos ${WINDOW_DAYS} dias.
 
-Cada item abaixo representa um GRUPO de pesquisas semanticamente similares (mesma raiz normalizada),
-com as variações distintas que os usuários digitaram, contagem total e quantos usuários distintos pesquisaram.
+Cada item é uma string única pesquisada, com o número total de ocorrências e usuários distintos.
 
-GRUPOS DE PESQUISAS SEM RESULTADO:
-${JSON.stringify(eligible, null, 2)}
+PESQUISAS SEM RESULTADO:
+${JSON.stringify(compact, null, 2)}
 
 ARTIGOS JÁ PUBLICADOS NA BASE (NÃO sugira temas que já existem):
 ${JSON.stringify(existingArticles.map((a) => a.title), null, 2)}
 
 SUA TAREFA:
-1. Analise os grupos buscando INTENÇÃO REAL do usuário (o que ele realmente queria saber).
-2. Agrupe semanticamente quando fizer sentido (ex: "como faturar" e "emitir nota fiscal" podem ser o mesmo tema).
-3. IGNORE grupos que parecem ruído (digitação aleatória, testes, gibberish).
-4. Para cada tema com intenção CLARA e RECORRENTE, sugira um artigo a ser criado.
-5. Não sugira artigos que já existem na base.
-6. Priorize por: volume total + quantidade de usuários distintos + clareza da intenção.
-7. Se nenhum grupo tiver intenção clara, retorne lista vazia.
+1. Faça AGRUPAMENTO SEMÂNTICO das pesquisas. Considere:
+   - Sinônimos ("instalar" ≈ "configurar" ≈ "ativar")
+   - Permutação de palavras ("X como instalar" = "como instalar X")
+   - Variações de escrita, typos, plural/singular
+   - Mesma entidade (produto/feature) sendo perguntada de jeitos diferentes
+2. Para cada grupo, identifique a INTENÇÃO REAL do usuário (o que ele queria saber).
+3. IGNORE buscas isoladas que parecem ruído, teste, digitação aleatória ou gibberish.
+4. Sugira artigo APENAS para grupos com:
+   - Intenção clara e específica
+   - Pelo menos 2 buscas similares (mesmo que de 1 usuário só, se as variações sugerem genuíno interesse)
+   - Tema NÃO coberto pelos artigos já publicados
+5. Para cada tema válido, gere uma sugestão de artigo (título, excerpt SEO ≤160 chars, tópicos).
+6. Priorize por: volume total + usuários distintos + clareza da intenção.
+7. Se nenhum grupo for digno de virar artigo, retorne lista vazia.
 
 Sempre responda em Português do Brasil (PT-BR).
   `.trim()
@@ -209,8 +193,7 @@ Sempre responda em Português do Brasil (PT-BR).
     const parsed = JSON.parse(result.text) as { suggestions: ContentSuggestion[] }
     return {
       suggestions: parsed.suggestions ?? [],
-      groupsConsidered,
-      groupsSkipped,
+      totalAnalyzed: failed.length,
     }
   } catch (err: any) {
     throw new Error('Falha na comunicação com o Gemini: ' + err.message)

@@ -122,7 +122,7 @@ export default async function AtividadesPesquisaPage() {
           totalAll,
           totalFailed,
           windowDays: WINDOW_DAYS,
-          eligibleGroups: failedGroups.filter((g) => g.variants.length >= 3).length,
+          canAnalyze: totalFailed >= 3,
         }}
       />
     </div>
