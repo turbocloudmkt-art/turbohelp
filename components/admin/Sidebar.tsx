@@ -27,6 +27,7 @@ const navLinks = [
 ]
 
 const superAdminLinks = [
+  { href: '/admin/atividades-pesquisa', label: 'Atividades de pesquisa', icon: '🔍' },
   { href: '/admin/usuarios', label: 'Usuários', icon: '◉' },
 ]
 

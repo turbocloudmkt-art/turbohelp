@@ -10,14 +10,15 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
-  password  String
-  name      String
-  role      UserRole  @default(WRITER)
-  active    Boolean   @default(true)
-  createdAt DateTime  @default(now())
-  articles  Article[] @relation("ArticleAuthor")
+  id               String           @id @default(cuid())
+  email            String           @unique
+  password         String
+  name             String
+  role             UserRole         @default(WRITER)
+  active           Boolean          @default(true)
+  createdAt        DateTime         @default(now())
+  articles         Article[]        @relation("ArticleAuthor")
+  searchActivities SearchActivity[]
 
   @@map("users")
 }
@@ -91,6 +92,22 @@ model Highlight {
   article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   @@map("highlights")
+}
+
+model SearchActivity {
+  id           String   @id @default(cuid())
+  query        String
+  normalizedQ  String
+  resultsCount Int      @default(0)
+  userId       String
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([normalizedQ])
+  @@index([resultsCount])
+  @@index([createdAt])
+  @@index([userId])
+  @@map("search_activities")
 }
 
 enum ArticleStatus {

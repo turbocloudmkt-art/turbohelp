@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Topbar } from '@/components/public/Topbar'
+import { auth } from '@/lib/auth'
+import { normalizeSearchQuery } from '@/lib/searchNormalize'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,6 +39,28 @@ export default async function BuscaPage({ searchParams }: Props) {
                        plainto_tsquery('portuguese', ${query})) DESC
       LIMIT 20
     `
+  }
+
+  // Log da atividade de pesquisa (fire-and-forget, não bloqueia render)
+  if (query.length >= 2) {
+    const session = await auth()
+    if (session?.user?.id) {
+      const normalizedQ = normalizeSearchQuery(query)
+      if (normalizedQ.length > 0) {
+        prisma.searchActivity
+          .create({
+            data: {
+              query,
+              normalizedQ,
+              resultsCount: results.length,
+              userId: session.user.id,
+            },
+          })
+          .catch((err) => {
+            console.error('[searchActivity] falha ao logar pesquisa:', err)
+          })
+      }
+    }
   }
 
   const categoryIds = [...new Set(results.map((r) => r.categoryId))]
