@@ -360,44 +360,6 @@ ol {
   color: #666666;
 }
 
-/* 9. Breadcrumb -------------------------------------------- */
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px;
-  font-size: 14px;
-  color: var(--text-tertiary);
-  margin-bottom: 24px;
-}
-
-.breadcrumb__item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.breadcrumb__link {
-  color: var(--text-tertiary);
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.breadcrumb__link:hover {
-  color: var(--color-primary-dark);
-}
-
-.breadcrumb__separator {
-  color: var(--text-tertiary);
-  user-select: none;
-  margin: 0 2px;
-}
-
-.breadcrumb__current {
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
 /* 10. Article content -------------------------------------- */
 .article-content {
   font-size: 16px;
@@ -932,52 +894,6 @@ ol {
   justify-content: center;
 }
 
-/* 19. SearchBar -------------------------------------------- */
-.search-bar {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.search-bar__icon {
-  position: absolute;
-  left: 12px;
-  color: var(--text-tertiary);
-  pointer-events: none;
-  flex-shrink: 0;
-}
-
-.search-bar__input {
-  padding-left: 38px !important;
-  padding-right: 36px !important;
-}
-
-/* Remove o botão nativo de limpar do <input type="search"> */
-.search-bar__input::-webkit-search-cancel-button,
-.search-bar__input::-webkit-search-decoration {
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-.search-bar__clear {
-  position: absolute;
-  right: 10px;
-  background: none;
-  border: none;
-  padding: 4px;
-  color: var(--text-tertiary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: color 0.2s;
-}
-
-.search-bar__clear:hover {
-  color: var(--text-primary);
-}
-
 /* 20. FeedbackWidget --------------------------------------- */
 .feedback-widget {
   margin-top: 48px;
@@ -1029,82 +945,6 @@ ol {
   font-size: 15px;
   color: var(--color-primary-dark);
   font-weight: 500;
-}
-
-/* 21. TableOfContents -------------------------------------- */
-.toc {
-  width: 220px;
-  flex-shrink: 0;
-}
-
-.toc__title {
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--text-tertiary);
-  margin-bottom: 12px;
-}
-
-.toc__list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  border-left: 2px solid var(--color-border);
-}
-
-.toc__item {
-  transition: border-color 0.2s;
-}
-
-.toc__item--h2 {
-  padding-left: 12px;
-}
-
-.toc__item--h3 {
-  padding-left: 24px;
-}
-
-.toc__link {
-  display: block;
-  padding: 5px 0;
-  font-size: 13px;
-  color: var(--text-tertiary);
-  text-decoration: none;
-  line-height: 1.4;
-  transition: color 0.2s;
-}
-
-.toc__link:hover {
-  color: var(--color-primary-dark);
-}
-
-.toc__item--active > .toc__link {
-  color: var(--color-primary-dark);
-  font-weight: 600;
-}
-
-/* 22. Article layout (conteúdo + TOC lateral) -------------- */
-.article-layout {
-  display: flex;
-  gap: 48px;
-  align-items: flex-start;
-}
-
-.article-layout__main {
-  flex: 1;
-  min-width: 0;
-}
-
-.article-layout__toc {
-  flex-shrink: 0;
-  width: 220px;
-}
-
-@media (max-width: 1024px) {
-  .article-layout__toc {
-    display: none;
-  }
 }
 
 /* 23. Not found -------------------------------------------- */
