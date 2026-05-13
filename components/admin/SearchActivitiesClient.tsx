@@ -135,14 +135,14 @@ export function SearchActivitiesClient({ recent, failedGroups, stats }: Props) {
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
           <button
             onClick={handleAnalyze}
-            disabled={analyzing || stats.eligibleGroups === 0}
+            disabled={analyzing}
             className="btn-primary"
             title={
               stats.eligibleGroups === 0
-                ? 'Sem grupos elegíveis (precisa ≥3 variações distintas em 30d)'
+                ? 'Nenhum grupo atinge o threshold de ≥3 variações distintas em 30d — análise retornará vazia'
                 : 'Analisar pesquisas sem resultado com Gemini Flash'
             }
-            style={{ opacity: stats.eligibleGroups === 0 ? 0.5 : 1 }}
+            style={{ opacity: analyzing ? 0.6 : 1 }}
           >
             {analyzing ? 'Analisando…' : '✨ Analisar com IA'}
           </button>
@@ -394,7 +394,13 @@ export function SearchActivitiesClient({ recent, failedGroups, stats }: Props) {
               )}
 
               {suggestions.length === 0 ? (
-                <EmptyState message="A IA não encontrou padrões com intenção clara o suficiente para sugerir conteúdo." />
+                <EmptyState
+                  message={
+                    analysisMeta && analysisMeta.considered === 0
+                      ? `Nenhum grupo elegível para análise (necessário ≥3 variações distintas em 30 dias). ${analysisMeta.skipped} grupo(s) sem resultado existem, mas não atingem o threshold de volume.`
+                      : 'A IA não encontrou padrões com intenção clara o suficiente para sugerir conteúdo.'
+                  }
+                />
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {suggestions.map((s, i) => (
