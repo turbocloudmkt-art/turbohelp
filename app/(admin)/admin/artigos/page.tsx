@@ -13,13 +13,6 @@ const STATUS_LABELS: Record<ArticleStatus, string> = {
   ARCHIVED: 'Arquivado',
 }
 
-const STATUS_STYLES: Record<ArticleStatus, { bg: string; color: string }> = {
-  PUBLISHED: { bg: '#e8f9f3', color: '#00a86b' },
-  DRAFT:     { bg: '#fef3c7', color: '#92400e' },
-  REVIEW:    { bg: '#dbeafe', color: '#1e40af' },
-  ARCHIVED:  { bg: '#f5f5f7', color: '#666666' },
-}
-
 const PAGE_SIZE = 20
 
 interface Props {
