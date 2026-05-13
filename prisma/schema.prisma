@@ -18,6 +18,7 @@ model User {
   active           Boolean          @default(true)
   createdAt        DateTime         @default(now())
   articles         Article[]        @relation("ArticleAuthor")
+  articleViews     ArticleView[]
   favorites        Favorite[]
   searchActivities SearchActivity[]
 
@@ -59,6 +60,7 @@ model Article {
   updatedAt     DateTime       @updatedAt
   author        User           @relation("ArticleAuthor", fields: [authorId], references: [id])
   category      Category       @relation(fields: [categoryId], references: [id])
+  articleViews  ArticleView[]
   favorites     Favorite[]
   highlights    Highlight[]
   supportBlocks SupportBlock[]
@@ -94,6 +96,20 @@ model Highlight {
   article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   @@map("highlights")
+}
+
+model ArticleView {
+  id        String   @id @default(cuid())
+  articleId String
+  userId    String?
+  createdAt DateTime @default(now())
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([articleId, createdAt])
+  @@index([createdAt])
+  @@index([userId])
+  @@map("article_views")
 }
 
 model Favorite {

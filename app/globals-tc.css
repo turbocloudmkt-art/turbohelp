@@ -497,6 +497,17 @@ body {
 .tc-favBtn.is-on { background: var(--purple-50); border-color: var(--purple-300); color: var(--purple-700); }
 .tc-favBtn.is-on svg { fill: var(--purple-500); }
 
+/* INLINE RANK (lista de mais acessados) */
+.tc-rank {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-4);
+  margin-right: 8px;
+  min-width: 22px;
+}
+
 /* BACK LINK */
 .tc-back {
   display: inline-flex; align-items: center; gap: 6px;

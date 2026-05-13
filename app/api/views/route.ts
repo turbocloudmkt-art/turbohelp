@@ -20,10 +20,15 @@ export async function POST(request: NextRequest) {
   // simples sem controle de duplicidade para manter a implementação
   // sem dependência de cache externo (Redis/Upstash). O IP está disponível
   // via request.headers.get('x-forwarded-for') quando necessário.
-  await prisma.article.update({
-    where: { id: articleId },
-    data: { views: { increment: 1 } },
-  })
+  await prisma.$transaction([
+    prisma.article.update({
+      where: { id: articleId },
+      data: { views: { increment: 1 } },
+    }),
+    prisma.articleView.create({
+      data: { articleId, userId: session.user.id },
+    }),
+  ])
 
   return NextResponse.json({ ok: true })
 }

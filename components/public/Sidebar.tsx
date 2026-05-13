@@ -38,11 +38,13 @@ export function Sidebar({ user, categories, favoritesCount }: SidebarProps) {
   const canAccessAdmin = user.role !== 'VIEWER'
   const pathname = usePathname() ?? ''
 
-  let activeView: 'home' | 'category' | 'article' | 'favorites' = 'home'
+  let activeView: 'home' | 'category' | 'article' | 'favorites' | 'topviews' = 'home'
   let activeCategorySlug: string | undefined
 
   if (pathname === '/ajuda/favoritos') {
     activeView = 'favorites'
+  } else if (pathname === '/ajuda/mais-acessados') {
+    activeView = 'topviews'
   } else if (pathname.startsWith('/ajuda/')) {
     const parts = pathname.split('/').filter(Boolean)
     if (parts[1] && parts[1] !== 'busca') {
@@ -68,12 +70,14 @@ export function Sidebar({ user, categories, favoritesCount }: SidebarProps) {
             <span>Início</span>
           </Link>
 
-          {/* Acesso rápido — itens mockados, sem destino real (Fase 2) */}
-          <span className="tc-sb__navItem tc-sb__navItem--mock" aria-disabled="true">
+          <Link
+            href="/ajuda/mais-acessados"
+            className={`tc-sb__navItem ${activeView === 'topviews' ? 'is-active' : ''}`}
+          >
             <Icon name="trending-up" size={16} />
             <span>Mais acessados</span>
-            <span className="tc-sb__navBadge">24h</span>
-          </span>
+            <span className="tc-sb__navBadge">7d</span>
+          </Link>
           <span className="tc-sb__navItem tc-sb__navItem--mock" aria-disabled="true">
             <Icon name="clock" size={16} />
             <span>Recentes</span>
