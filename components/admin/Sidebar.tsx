@@ -96,6 +96,39 @@ export function Sidebar({ userName, userRole, isSuperAdmin }: SidebarProps) {
         </Link>
       </div>
 
+      {/* Voltar para o TurboHelp (area publica) */}
+      <div style={{ padding: '14px 16px 0' }}>
+        <Link
+          href="/"
+          onClick={() => setMobileOpen(false)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '9px 12px',
+            borderRadius: '8px',
+            textDecoration: 'none',
+            fontSize: '12.5px',
+            fontWeight: 600,
+            color: 'rgba(255,255,255,0.85)',
+            backgroundColor: 'rgba(0,208,132,0.12)',
+            border: '1px solid rgba(0,208,132,0.35)',
+            transition: 'all 0.15s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(0,208,132,0.22)'
+            e.currentTarget.style.color = '#fff'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(0,208,132,0.12)'
+            e.currentTarget.style.color = 'rgba(255,255,255,0.85)'
+          }}
+        >
+          <span style={{ fontSize: '14px', lineHeight: 1 }}>←</span>
+          Voltar para o TurboHelp
+        </Link>
+      </div>
+
       {/* Links de navegação */}
       <div style={{ flex: 1, padding: '16px 12px', overflowY: 'auto' }}>
         <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
